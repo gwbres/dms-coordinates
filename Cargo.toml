@@ -1,0 +1,15 @@
+[package]
+name = "dms-coordinates"
+version = "0.1.0"
+license-file = "LICENSE"
+authors = ["Guillaume W. Bres <guillaume.bressaix@gmail.com>"]
+description = "Package to handle D°M'S'' coordinates"
+homepage = "https://github.com/gwbres/dms-coordinates"
+keywords = ["positionning", ]
+categories = ["science",]
+edition = "2018"
+readme = "README.md"
+
+[dependencies]
+
+[dev-dependencies]
