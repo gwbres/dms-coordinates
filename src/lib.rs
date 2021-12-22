@@ -32,9 +32,7 @@ impl DMS {
     /// longitude otherwise.
     pub fn from_decimal_degrees (ddeg: f64, is_lat: bool) -> DMS {
         let d = ddeg.abs().trunc() as i32;
-        //let m = ((ddeg - d as f64) * 60.0).trunc() as i32;
         let m = ((ddeg.abs() - d as f64) * 60.0).trunc() as i32;
-        //let s = ((ddeg - d as f64 - (m as f64)/60.0_f64)) * 3600_f64;
         let s = (ddeg.abs() - d as f64 - (m as f64)/60.0_f64) * 3600.0_f64;
 
         let bearing = match is_lat {
@@ -50,16 +48,16 @@ impl DMS {
         }
     }
 
-    // Returns D°
+    /// Returns D°
     pub fn get_degrees (&self) -> i32 { return self.degrees }
-    // Returns M'
+    /// Returns M'
     pub fn get_minutes (&self) -> i32 { return self.minutes }
-    // Returns S''
+    /// Returns S''
     pub fn get_seconds (&self) -> f64 { return self.seconds }
-    // Returns bearing 
+    /// Returns bearing 
     pub fn get_bearing (&self) -> char { return self.bearing }
 
-    // Converts `D°M'S''` coordinates to `Decimal Degrees` coordinates
+    /// Converts `D°M'S''` coordinates to `Decimal Degrees` coordinates
     pub fn to_decimal_degrees (&self) -> f64 {
         let ddeg: f64 = self.degrees as f64
             + self.minutes as f64 / 60.0_f64
