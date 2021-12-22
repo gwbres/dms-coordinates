@@ -38,8 +38,8 @@ impl DMS {
         let s = (ddeg.abs() - d as f64 - (m as f64)/60.0_f64) * 3600.0_f64;
 
         let bearing = match is_lat {
-            true => single_line_if_else!(d<0,'S','N'),
-            false => single_line_if_else!(d<0,'W','E'),
+            true => single_line_if_else!(ddeg<0.0,'S','N'),
+            false => single_line_if_else!(ddeg<0.0,'W','E'),
         };
 
         DMS {
@@ -107,16 +107,19 @@ mod tests {
         let secs = 6.8712_f64; // NY
         assert_eq!(dms.get_degrees(), 73); // NY
         assert_eq!(dms.get_minutes(), 56); // NY
+        assert_eq!(dms.get_bearing(), 'W');
         assert!((dms.get_seconds() - secs).abs() < 1E-3);
         let dms = DMS::from_decimal_degrees(151.209900_f64, false); // SYDNEY (lon) 
         let secs = 35.64_f64; // SYDNEY
         assert_eq!(dms.get_degrees(), 151); // SYDNEY
         assert_eq!(dms.get_minutes(), 12); // SYDNEY
+        assert_eq!(dms.get_bearing(), 'E');
         assert!((dms.get_seconds() - secs).abs() < 1E-3);
         let dms = DMS::from_decimal_degrees(-34.603722, true); // Buenos Aires (lon) 
         let secs = 13.3992_f64; // Buenos Aires 
         assert_eq!(dms.get_degrees(), 34); 
         assert_eq!(dms.get_minutes(), 36); 
+        assert_eq!(dms.get_bearing(), 'S');
         assert!((dms.get_seconds() - secs).abs() < 1E-3)
     }
 }
