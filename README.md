@@ -16,7 +16,7 @@ Single coordinate:
 ```
 
 Build D°M'S'' from decimal degrees coordinates
-```
+```rust
     let dms = DMS::from_decimal_degrees(-73.9893_f64); // NY longitude
     assert_eq!(dms.get_bearing(), 'N'); // 'N' bearing
     assert_eq!(dms.get_degrees(), 73); // NY::lon D°
