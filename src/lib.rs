@@ -1,3 +1,10 @@
+//! DMS Coordinates
+//!
+//! Package to manipulate D°M'S'' coordinates
+//! mainly in navigation applications.
+//!
+//! Homepage: <https://github.com/gwbres/dms-coordinates>
+
 /// List of known bearings to construct a `D°M'S''`
 pub const KNOWN_BEARINGS: &'static [char] = &['N','S','E','W'];
 
