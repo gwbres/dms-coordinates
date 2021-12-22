@@ -62,7 +62,7 @@ impl DMS {
             + self.minutes as f64 / 60.0_f64
             + self.seconds as f64 / 3600.0_f64;
 
-        if self.get_bearing() == 'N' || self.get_bearing() == 'W' {
+        if self.get_bearing() == 'S' || self.get_bearing() == 'W' {
             -ddeg
         } else {
             ddeg
@@ -85,15 +85,19 @@ mod tests {
         let dms = DMS::new(10, 20, 100.0_f64, 'C');
         assert_eq!(dms.is_err(), true); // non valid values
     }
-/*
+    
     #[test]
     fn test_dms_to_ddeg_conversion() {
-        let new_york_dms = DMS::new(40, 43, 50.196_f64);
-        let new_york_lat = new_york_dms.to_decimal_degrees();
+        let dms = DMS::new(40, 43, 50.196_f64, 'N').unwrap(); // NY lat
+        let lat = dms.to_decimal_degrees();
         let expected_lat = 40.730; // NY lat
-        assert!((new_york_lat - expected_lat).abs() < 1E-3)
+        assert!((lat - expected_lat).abs() < 1E-3);
+        let dms = DMS::new(33, 51, 45.36_f64, 'S').unwrap(); // Sydney lat
+        let lat = dms.to_decimal_degrees();
+        let expected_lat = -33.867; // NY lat
+        assert!((lat - expected_lat).abs() < 1E-2)
     }
-
+/*
     #[test]
     fn test_dms_from_ddeg_construction() {
         let new_york_lat = DMS::from_decimal_degrees(-73.9893_f64); // NY longitude 
@@ -104,6 +108,3 @@ mod tests {
     }
 */
 }
-
-
-    
