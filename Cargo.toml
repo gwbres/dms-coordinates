@@ -11,4 +11,3 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
-map_3d = { git = "ssh://git@github.com/gwbres/map_3d.git" }
