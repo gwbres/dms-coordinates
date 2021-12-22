@@ -27,12 +27,15 @@ impl DMS {
     }
 
     /// Buils new `D°M'S''` coordinates
-    /// from given decimal coordinates.  
-    /// is_lat: true if given dec. coordinates represent a latitude
-    pub fn from_decimal_degrees (is_lat: bool, ddeg: f64) -> DMS {
-        let d = ddeg.trunc() as i32;
-        let m = (60.0 * (ddeg - ddeg.trunc().abs())) as i32;
-        let s = (ddeg - ddeg.trunc()).abs() - 60.0 * (60.0 * (ddeg - ddeg.trunc()).abs());
+    /// from given decimal coordinates.   
+    /// is_lat: true to express result as latitude coordinates,
+    /// longitude otherwise.
+    pub fn from_decimal_degrees (ddeg: f64, is_lat: bool) -> DMS {
+        let d = ddeg.abs().trunc() as i32;
+        //let m = ((ddeg - d as f64) * 60.0).trunc() as i32;
+        let m = ((ddeg.abs() - d as f64) * 60.0).trunc() as i32;
+        //let s = ((ddeg - d as f64 - (m as f64)/60.0_f64)) * 3600_f64;
+        let s = (ddeg.abs() - d as f64 - (m as f64)/60.0_f64) * 3600.0_f64;
 
         let bearing = match is_lat {
             true => single_line_if_else!(d<0,'S','N'),
@@ -40,7 +43,7 @@ impl DMS {
         };
 
         DMS {
-            degrees: d, 
+            degrees: d,  
             minutes: m, 
             seconds: s,
             bearing: bearing,
@@ -88,23 +91,32 @@ mod tests {
     
     #[test]
     fn test_dms_to_ddeg_conversion() {
-        let dms = DMS::new(40, 43, 50.196_f64, 'N').unwrap(); // NY lat
+        let dms = DMS::new(40, 43, 50.196_f64, 'N').unwrap(); // NY (lat)
         let lat = dms.to_decimal_degrees();
-        let expected_lat = 40.730; // NY lat
+        let expected_lat = 40.730; // NY
         assert!((lat - expected_lat).abs() < 1E-3);
-        let dms = DMS::new(33, 51, 45.36_f64, 'S').unwrap(); // Sydney lat
+        let dms = DMS::new(33, 51, 45.36_f64, 'S').unwrap(); // SYDNEY (lat)
         let lat = dms.to_decimal_degrees();
-        let expected_lat = -33.867; // NY lat
+        let expected_lat = -33.867; // SYDNEY 
         assert!((lat - expected_lat).abs() < 1E-2)
     }
-/*
+    
     #[test]
     fn test_dms_from_ddeg_construction() {
-        let new_york_lat = DMS::from_decimal_degrees(-73.9893_f64); // NY longitude 
-        let expected_secs = 6.871_f64; // NY::lon S''
-        assert_eq!(new_york_lat.get_degrees(), 73); // NY::lon D°
-        assert_eq!(new_york_lat.get_minutes(), 56); // NY::lon M'
-        assert!((new_york_lat.get_seconds() - expected_secs).abs() < 1E-3)
+        let dms = DMS::from_decimal_degrees(-73.935242_f64, false); // NY (lon) 
+        let secs = 6.8712_f64; // NY
+        assert_eq!(dms.get_degrees(), 73); // NY
+        assert_eq!(dms.get_minutes(), 56); // NY
+        assert!((dms.get_seconds() - secs).abs() < 1E-3);
+        let dms = DMS::from_decimal_degrees(151.209900_f64, false); // SYDNEY (lon) 
+        let secs = 35.64_f64; // SYDNEY
+        assert_eq!(dms.get_degrees(), 151); // SYDNEY
+        assert_eq!(dms.get_minutes(), 12); // SYDNEY
+        assert!((dms.get_seconds() - secs).abs() < 1E-3);
+        let dms = DMS::from_decimal_degrees(-34.603722, true); // Buenos Aires (lon) 
+        let secs = 13.3992_f64; // Buenos Aires 
+        assert_eq!(dms.get_degrees(), 34); 
+        assert_eq!(dms.get_minutes(), 36); 
+        assert!((dms.get_seconds() - secs).abs() < 1E-3)
     }
-*/
 }
