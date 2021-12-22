@@ -73,6 +73,38 @@ impl DMS {
     }
 }
 
+/// `3D D°M'S''` coordinates   
+/// (latitude, longitude, optionnal altitude)
+#[derive(PartialEq, Clone, Copy, Debug)]
+pub struct DMS3d {
+   latitude: DMS,
+   longitude: DMS,
+   altitude: Option<f64>,
+}
+
+impl DMS3d {
+    /// Builds new `3D D°M'S''`  coordinates
+    pub fn new (latitude: DMS, longitude: DMS, altitude: Option<f64>) -> DMS3d {
+        DMS3d {
+            latitude: latitude,
+            longitude: longitude,
+            altitude: altitude,
+        }
+    }
+    /// Builds a `3D D°M'S''` from given coordinates in decimal degrees
+    pub fn from_decimal_degrees (lat: f64, lon: f64, altitude: Option<f64>) -> DMS3d {
+        DMS3d {
+            latitude: DMS::from_decimal_degrees(lat, false),
+            longitude: DMS::from_decimal_degrees(lon, true),
+            altitude: altitude
+        }
+    }
+
+    /// Returns altitude of self
+    pub fn get_altitude (&self) -> Option<f64> { self.altitude }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,5 +153,19 @@ mod tests {
         assert_eq!(dms.get_minutes(), 36); 
         assert_eq!(dms.get_bearing(), 'S');
         assert!((dms.get_seconds() - secs).abs() < 1E-3)
+    }
+
+    #[test]
+    fn test_3ddms_construction() {
+        let lat = DMS::new(10, 20, 100.0_f64, 'N')
+            .unwrap();
+        let lon = DMS::new(30, 40, 200.0_f64, 'E')
+            .unwrap();
+        let dms = DMS3d::new(lat, lon, Some(150.0_f64)); 
+        assert_eq!(dms.latitude.get_degrees(), 10);
+        assert_eq!(dms.latitude.get_minutes(), 20);
+        assert_eq!(dms.longitude.get_degrees(), 30);
+        assert_eq!(dms.longitude.get_minutes(), 40);
+        assert_eq!(dms.altitude, Some(150.0_f64));
     }
 }
