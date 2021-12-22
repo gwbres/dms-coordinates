@@ -9,7 +9,8 @@ Rust package to manipulate D°M'S'' coordinates.
 Single coordinate: 
 
 ```rust
-    let dms = DMS::new(40, 43, 50.196_f64, true); // NY latitude
+    let dms = DMS::new(40, 43, 50.196_f64, 'N') // NY latitude
+        .unwrap();
     prinln!("{:#?}", dms);
     prinln!("{}", dms.get_degrees());
     prinln!("{}", dms.to_decimal_degrees());
