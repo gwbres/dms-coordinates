@@ -94,8 +94,8 @@ impl DMS3d {
     /// Builds a `3D D°M'S''` from given coordinates in decimal degrees
     pub fn from_decimal_degrees (lat: f64, lon: f64, altitude: Option<f64>) -> DMS3d {
         DMS3d {
-            latitude: DMS::from_decimal_degrees(lat, false),
-            longitude: DMS::from_decimal_degrees(lon, true),
+            latitude: DMS::from_decimal_degrees(lat, true),
+            longitude: DMS::from_decimal_degrees(lon, false),
             altitude: altitude
         }
     }
@@ -167,5 +167,22 @@ mod tests {
         assert_eq!(dms.longitude.get_degrees(), 30);
         assert_eq!(dms.longitude.get_minutes(), 40);
         assert_eq!(dms.altitude, Some(150.0_f64));
+    }
+
+    #[test]
+    fn test_3ddms_from_ddeg() {
+        let dms = DMS3d::from_decimal_degrees(
+            40.730610_f64, // NY
+            -73.935242_f64, // NY
+            Some(10.0)
+        );
+        assert_eq!(dms.latitude.get_degrees(), 40); // NY
+        assert_eq!(dms.latitude.get_minutes(), 43); // NY
+        assert_eq!(dms.latitude.get_bearing(), 'N');
+        assert!((dms.latitude.get_seconds() - 50.1960).abs() < 1E-3);
+        assert_eq!(dms.longitude.get_degrees(), 73); // NY
+        assert_eq!(dms.longitude.get_minutes(), 56); // NY
+        assert_eq!(dms.longitude.get_bearing(), 'W');
+        assert!((dms.longitude.get_seconds() - 6.8712).abs() < 1E-3);
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "dms-coordinates"
-version = "0.1.0"
+version = "0.1.1"
 license-file = "LICENSE"
 authors = ["Guillaume W. Bres <guillaume.bressaix@gmail.com>"]
 description = "Package to handle D°M'S'' coordinates"

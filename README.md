@@ -25,3 +25,21 @@ Build D°M'S'' from decimal degrees coordinates
     assert_eq!(dms.get_degrees(), 73); // NY::lon D°
     assert_eq!(dms.get_minutes(), 56); // NY::lon M'
 ```
+
+3D coordinates
+
+```rust
+    let dms = DMS3d::from_decimal_degrees(
+        40.730610_f64, // NY
+        -73.935242_f64, // NY
+        Some(10.0)
+    );
+    assert_eq!(dms.latitude.get_degrees(), 40); // NY
+    assert_eq!(dms.latitude.get_minutes(), 43); // NY
+    assert_eq!(dms.latitude.get_bearing(), 'N');
+    assert!((dms.latitude.get_seconds() - 50.1960).abs() < 1E-3);
+    assert_eq!(dms.longitude.get_degrees(), 73); // NY
+    assert_eq!(dms.longitude.get_minutes(), 56); // NY
+    assert_eq!(dms.longitude.get_bearing(), 'W');
+    assert!((dms.longitude.get_seconds() - 6.8712).abs() < 1E-3);
+```
