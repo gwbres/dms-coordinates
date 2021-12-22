@@ -102,8 +102,15 @@ impl DMS3d {
 
     /// Returns altitude of self
     pub fn get_altitude (&self) -> Option<f64> { self.altitude }
-}
 
+    /// Returns distance (m) between self and another DMS3d
+    pub fn distance (&self, other: DMS3d) -> f64 {
+        map_3d::distance(
+            (self.latitude.to_decimal_degrees(),self.longitude.to_decimal_degrees()),
+            (other.latitude.to_decimal_degrees(),other.longitude.to_decimal_degrees())
+        )
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -184,5 +191,22 @@ mod tests {
         assert_eq!(dms.longitude.get_minutes(), 56); // NY
         assert_eq!(dms.longitude.get_bearing(), 'W');
         assert!((dms.longitude.get_seconds() - 6.8712).abs() < 1E-3);
+    }
+
+    #[test]
+    fn test_distance() {
+        let dms1 = DMS3d::from_decimal_degrees( // NY
+            40.730610_f64,
+            -73.935242_f64,
+            Some(10.0)
+        );
+        let dms2 = DMS3d::from_decimal_degrees( // Paris
+            48.856614, 
+            2.3522219,
+            Some(10.0)
+        );
+        let expected_km = 5831.0_f64; 
+        let d_km = dms1.distance(dms2) / 1000.0_f64;
+        assert!((expected_km - d_km).abs() < 1.0);
     }
 }

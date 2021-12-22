@@ -1,6 +1,6 @@
 [package]
 name = "dms-coordinates"
-version = "0.1.1"
+version = "0.1.2"
 license-file = "LICENSE"
 authors = ["Guillaume W. Bres <guillaume.bressaix@gmail.com>"]
 description = "Package to handle D°M'S'' coordinates"
@@ -11,5 +11,4 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
-
-[dev-dependencies]
+map_3d = { git = "ssh://git@github.com/gwbres/map_3d.git" }
