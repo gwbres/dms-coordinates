@@ -110,6 +110,15 @@ pub struct DMS3d {
    altitude: Option<f64>,
 }
 
+impl std::fmt::Display for DMS3d {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "lat: \"{}\"  lon: \"{}\" alt: \"{}\"", 
+            self.get_latitude().to_decimal_degrees(), 
+            self.get_longitude().to_decimal_degrees(), 
+            self.get_altitude().unwrap_or(0.0_f64))
+    }
+}
+
 impl Default for DMS {
     fn default() -> DMS { DMS::from_decimal_degrees(0.0_f64, false) }
 }
