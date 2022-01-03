@@ -45,3 +45,19 @@ Build D°M'S'' from decimal degrees coordinates
     assert_eq!(dms.longitude.get_bearing(), 'W');
     assert!((dms.longitude.get_seconds() - 6.8712).abs() < 1E-3);
 ```
+
+(Projected) Distance (m) between two 3D coordinates:
+
+```rust
+    let new_york = DMS3d::from_decimal_degrees(
+        40.730610_f64,
+        -73.935242_f64,
+        Some(10.0)
+    );
+    let paris = DMS3d::from_decimal_degrees(
+        48.856614, 
+        2.3522219,
+        Some(10.0)
+    );
+    println!("{}", new_york.distance(paris) / 1000.0);
+```
