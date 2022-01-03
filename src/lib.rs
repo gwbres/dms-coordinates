@@ -144,6 +144,18 @@ impl DMS3d {
 
     /// Returns altitude of self
     pub fn get_altitude (&self) -> Option<f64> { self.altitude }
+    /// Assigns altitude
+    pub fn set_altitude (&mut self, alt: f64) { self.altitude = Some(alt) }
+
+    /// Returns latitude
+    pub fn get_latitude (&self) -> DMS { self.latitude }
+    /// Assigns latitude
+    pub fn set_latitude (&mut self, lat: DMS) { self.latitude = lat }
+    
+    /// Returns longitude 
+    pub fn get_longitude (&self) -> DMS { self.longitude }
+    /// Assigns longitude
+    pub fn set_longitude (&mut self, lon: DMS) { self.longitude = lon }
 
     /// Returns distance (m) between self and another DMS3d
     pub fn distance (&self, other: DMS3d) -> f64 {
