@@ -41,6 +41,12 @@ fn distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
     EARTH_RADIUS * c
 }
 
+impl std::fmt::Display for DMS {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "D°{} M'{} S''{}", self.get_degrees(), self.get_minutes(), self.get_seconds())
+    }
+}
+
 impl DMS {
     /// Builds new `D°M'S''` coordinates
     pub fn new (degrees: i32, minutes: i32, seconds: f64, bearing: char) -> Result<DMS, std::io::Error> {
@@ -102,6 +108,20 @@ pub struct DMS3d {
    latitude: DMS,
    longitude: DMS,
    altitude: Option<f64>,
+}
+
+impl Default for DMS {
+    fn default() -> DMS { DMS::from_decimal_degrees(0.0_f64, false) }
+}
+
+impl Default for DMS3d {
+    fn default() -> Self {
+        Self {
+            latitude: DMS::from_decimal_degrees(0.0_f64, true), 
+            longitude: DMS::from_decimal_degrees(0.0_f64, false), 
+            altitude: None
+        }
+    }
 }
 
 impl DMS3d {
