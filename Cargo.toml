@@ -1,6 +1,6 @@
 [package]
 name = "dms-coordinates"
-version = "0.1.5"
+version = "0.1.6"
 license = "MIT OR Apache-2.0"
 authors = ["Guillaume W. Bres <guillaume.bressaix@gmail.com>"]
 description = "Package to handle D°M'S'' coordinates"
@@ -12,3 +12,6 @@ readme = "README.md"
 
 [dependencies]
 map_3d = { git = "https://github.com/gberrante/map_3d", branch = "master" }
+thiserror = "1"
+geo-types = "0.7.2"
+gpx = "0.8.1"

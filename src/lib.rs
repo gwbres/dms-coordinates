@@ -4,6 +4,7 @@
 //! mainly in navigation applications.
 //!
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
+use thiserror::Error;
 
 /// List of known bearings to construct a `D°M'S''`
 pub const KNOWN_BEARINGS: &'static [char] = &['N','S','E','W'];
@@ -93,6 +94,16 @@ pub struct DMS3d {
    altitude: Option<f64>,
 }
 
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("failed to open file")]
+    IoError(#[from] std::io::Error),
+    #[error("gpx parsing error")]
+    GpxParsingError,
+    #[error("failed to wr file")]
+    GpxWritingError(#[from] gpx::errors::GpxError),
+}
+
 impl std::fmt::Display for DMS3d {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "lat: \"{}\"  lon: \"{}\" alt: \"{}\"", 
@@ -155,6 +166,39 @@ impl DMS3d {
             (self.latitude.to_decimal_degrees(),self.longitude.to_decimal_degrees()),
             (other.latitude.to_decimal_degrees(),other.longitude.to_decimal_degrees())
         )
+    }
+    
+    /// Writes self into .gpx file
+    pub fn to_gpx (&self, fp: &str) -> Result<(), gpx::errors::GpxError> {
+        let mut gpx : gpx::Gpx = Default::default();
+        gpx.version = gpx::GpxVersion::Gpx11;
+        let mut wpt = gpx::Waypoint::new(
+            geo_types::Point::new(
+                self.get_latitude().to_decimal_degrees(), 
+                self.get_longitude().to_decimal_degrees()));
+        wpt.elevation = self.get_altitude();
+        gpx.waypoints.push(wpt);
+        gpx::write(&gpx, std::fs::File::open(fp).unwrap())
+    }
+
+    /// Builds a 3D D°M'S'' object from a .gpx file 
+    pub fn from_gpx (fp: &str) -> Result<Option<DMS3d>, Error> {
+        let fd = std::fs::File::open(fp)?;
+        let content: Result<gpx::Gpx, gpx::errors::GpxError> = gpx::read(fd);
+        match content {
+            Ok(mut gpx) => {
+                if let Some(wpt) = gpx.waypoints.pop() {
+                    Ok(Some(DMS3d::from_decimal_degrees(
+                        wpt.point().y(),
+                        wpt.point().x(),
+                    wpt.elevation))
+                )
+                } else {
+                    Ok(None)
+                }
+            },
+            Err(_) => Err(Error::GpxParsingError)
+        }
     }
 }
 
