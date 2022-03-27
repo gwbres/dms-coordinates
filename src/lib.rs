@@ -8,6 +8,21 @@
 /// List of known bearings to construct a `D°M'S''`
 pub const KNOWN_BEARINGS: &'static [char] = &['N','S','E','W'];
 
+/// Earth radius (m)
+pub const EARTH_RADIUS: f64 = 6371E3_f64;
+
+/// Returns distance (m) between two decimal degrees coordinates::
+/// coord1: (lat,lon), coord2: (lat, lon)
+pub fn distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
+    let dphi = map_3d::deg2rad(coord2.0) - map_3d::deg2rad(coord1.0);
+    let d_lambda = map_3d::deg2rad(coord2.1) - map_3d::deg2rad(coord1.1);
+    let a: f64 = (dphi / 2.0_f64).sin().powf(2.0_f64)
+        + map_3d::deg2rad(coord1.0).cos() * map_3d::deg2rad(coord2.0).cos()
+            * (d_lambda/2.0_f64).sin().powf(2.0_f64);
+    let c = 2.0_f64 * a.powf(0.5_f64).atan2((1.0-a).powf(0.5_f64));
+    EARTH_RADIUS * c
+}
+
 /// `DMS` Structure to manipulate
 /// D°M'S'' coordinates
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -151,7 +166,7 @@ impl DMS3d {
 
     /// Returns distance (m) between self and another DMS3d
     pub fn distance (&self, other: DMS3d) -> f64 {
-        map_3d::distance(
+        distance(
             (self.latitude.to_decimal_degrees(),self.longitude.to_decimal_degrees()),
             (other.latitude.to_decimal_degrees(),other.longitude.to_decimal_degrees())
         )
