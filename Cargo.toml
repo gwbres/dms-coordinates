@@ -12,3 +12,6 @@ readme = "README.md"
 
 [dependencies]
 map_3d = "0.1.4" 
+thiserror = "1"
+geo-types = "0.7.2"
+gpx = "0.8.1"
