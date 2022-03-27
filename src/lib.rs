@@ -193,7 +193,7 @@ impl DMS3d {
                 self.get_longitude().to_decimal_degrees()));
         wpt.elevation = self.get_altitude();
         gpx.waypoints.push(wpt);
-        gpx::write(&gpx, std::fs::File::open(fp).unwrap())
+        gpx::write(&gpx, std::fs::File::create(fp).unwrap())
     }
 
     /// Builds a 3D D°M'S'' object from a .gpx file 
@@ -313,5 +313,15 @@ mod tests {
         let expected_km = 5831.0_f64; 
         let d_km = dms1.distance(dms2) / 1000.0_f64;
         assert!((expected_km - d_km).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_to_gpx() {
+        let dms = DMS3d::from_decimal_degrees(
+            40.730610_f64, // NY
+            -73.935242_f64, // NY
+            Some(10.0)
+        );
+        assert_eq!(dms.to_gpx("ny.gpx").is_ok(), true)
     }
 }
