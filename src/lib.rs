@@ -204,8 +204,8 @@ impl DMS3d {
             Ok(mut gpx) => {
                 if let Some(wpt) = gpx.waypoints.pop() {
                     Ok(Some(DMS3d::from_decimal_degrees(
-                        wpt.point().y(),
                         wpt.point().x(),
+                        wpt.point().y(),
                     wpt.elevation))
                 )
                 } else {
@@ -322,6 +322,10 @@ mod tests {
             -73.935242_f64, // NY
             Some(10.0)
         );
-        assert_eq!(dms.to_gpx("ny.gpx").is_ok(), true)
+        assert_eq!(dms.to_gpx("ny.gpx").is_ok(), true);
+        let ny = DMS3d::from_gpx("ny.gpx")
+            .unwrap()
+            .unwrap();
+        assert_eq!(ny.distance(dms), 0.0)
     }
 }
