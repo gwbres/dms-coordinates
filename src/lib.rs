@@ -109,6 +109,7 @@ impl DMS {
 /// `3D D°M'S''` coordinates   
 /// (latitude, longitude, optionnal altitude)
 #[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct DMS3d {
    latitude: DMS,
    longitude: DMS,
