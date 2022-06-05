@@ -5,6 +5,7 @@
 //!
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
 use thiserror::Error;
+use serde_derive::{Serialize, Deserialize};
 
 /// List of known bearings to construct a `D°M'S''`
 pub const KNOWN_BEARINGS: &'static [char] = &['N','S','E','W'];
@@ -27,6 +28,7 @@ pub fn distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
 /// `DMS` Structure to manipulate
 /// D°M'S'' coordinates
 #[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct DMS {
     degrees: i32,
     minutes: i32,
@@ -42,7 +44,11 @@ macro_rules! single_line_if_else {
 
 impl std::fmt::Display for DMS {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "D°{} M'{} S''{}", self.get_degrees(), self.get_minutes(), self.get_seconds())
+        write!(f, "{}°{}'{}''{}", 
+            self.degrees, 
+            self.minutes, 
+            self.seconds,
+            self.bearing)
     }
 }
 
