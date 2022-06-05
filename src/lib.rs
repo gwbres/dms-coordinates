@@ -30,10 +30,10 @@ pub fn distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
 #[derive(PartialEq, Clone, Copy, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS {
-    degrees: i32,
-    minutes: i32,
-    seconds: f64,
-    bearing: char,
+    pub degrees: i32,
+    pub minutes: i32,
+    pub seconds: f64,
+    pub bearing: char,
 }
 
 macro_rules! single_line_if_else {
@@ -83,25 +83,15 @@ impl DMS {
         }
     }
 
-    /// Returns D°
-    pub fn get_degrees (&self) -> i32 { return self.degrees }
-    /// Returns M'
-    pub fn get_minutes (&self) -> i32 { return self.minutes }
-    /// Returns S''
-    pub fn get_seconds (&self) -> f64 { return self.seconds }
-    /// Returns bearing 
-    pub fn get_bearing (&self) -> char { return self.bearing }
-
     /// Converts `D°M'S''` coordinates to `Decimal Degrees` coordinates
     pub fn to_decimal_degrees (&self) -> f64 {
         let ddeg: f64 = self.degrees as f64
             + self.minutes as f64 / 60.0_f64
             + self.seconds as f64 / 3600.0_f64;
 
-        if self.get_bearing() == 'S' || self.get_bearing() == 'W' {
-            -ddeg
-        } else {
-            ddeg
+        match self.bearing {
+            'S' | 'W' => -ddeg,
+            _ => ddeg
         }
     }
 }
@@ -111,9 +101,9 @@ impl DMS {
 #[derive(PartialEq, Clone, Copy, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS3d {
-   latitude: DMS,
-   longitude: DMS,
-   altitude: Option<f64>,
+   pub latitude: DMS,
+   pub longitude: DMS,
+   pub altitude: Option<f64>,
 }
 
 #[derive(Error, Debug)]
@@ -129,9 +119,9 @@ pub enum Error {
 impl std::fmt::Display for DMS3d {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "lat: \"{}\"  lon: \"{}\" alt: \"{}\"", 
-            self.get_latitude().to_decimal_degrees(), 
-            self.get_longitude().to_decimal_degrees(), 
-            self.get_altitude().unwrap_or(0.0_f64))
+            self.latitude.to_decimal_degrees(), 
+            self.longitude.to_decimal_degrees(), 
+            self.altitude.unwrap_or(0.0_f64))
     }
 }
 
@@ -167,21 +157,6 @@ impl DMS3d {
         }
     }
 
-    /// Returns altitude of self
-    pub fn get_altitude (&self) -> Option<f64> { self.altitude }
-    /// Assigns altitude
-    pub fn set_altitude (&mut self, alt: f64) { self.altitude = Some(alt) }
-
-    /// Returns latitude
-    pub fn get_latitude (&self) -> DMS { self.latitude }
-    /// Assigns latitude
-    pub fn set_latitude (&mut self, lat: DMS) { self.latitude = lat }
-    
-    /// Returns longitude 
-    pub fn get_longitude (&self) -> DMS { self.longitude }
-    /// Assigns longitude
-    pub fn set_longitude (&mut self, lon: DMS) { self.longitude = lon }
-
     /// Returns distance (m) between self and another DMS3d
     pub fn distance (&self, other: DMS3d) -> f64 {
         distance(
@@ -196,9 +171,9 @@ impl DMS3d {
         gpx.version = gpx::GpxVersion::Gpx11;
         let mut wpt = gpx::Waypoint::new(
             geo_types::Point::new(
-                self.get_latitude().to_decimal_degrees(), 
-                self.get_longitude().to_decimal_degrees()));
-        wpt.elevation = self.get_altitude();
+                self.latitude.to_decimal_degrees(), 
+                self.longitude.to_decimal_degrees()));
+        wpt.elevation = self.altitude;
         gpx.waypoints.push(wpt);
         gpx::write(&gpx, std::fs::File::create(fp).unwrap())
     }
@@ -232,10 +207,10 @@ mod tests {
         let dms = DMS::new(10, 20, 100.0_f64, 'N');
         assert_eq!(dms.is_err(), false); // valid values
         let dms = dms.unwrap();
-        assert_eq!(dms.get_degrees(), 10);
-        assert_eq!(dms.get_minutes(), 20);
-        assert_eq!(dms.get_seconds(), 100.0_f64);
-        assert_eq!(dms.get_bearing(), 'N');
+        assert_eq!(dms.degrees, 10);
+        assert_eq!(dms.minutes, 20);
+        assert_eq!(dms.seconds, 100.0_f64);
+        assert_eq!(dms.bearing, 'N');
         let dms = DMS::new(10, 20, 100.0_f64, 'C');
         assert_eq!(dms.is_err(), true); // non valid values
     }
@@ -256,22 +231,22 @@ mod tests {
     fn test_dms_from_ddeg_construction() {
         let dms = DMS::from_decimal_degrees(-73.935242_f64, false); // NY (lon) 
         let secs = 6.8712_f64; // NY
-        assert_eq!(dms.get_degrees(), 73); // NY
-        assert_eq!(dms.get_minutes(), 56); // NY
-        assert_eq!(dms.get_bearing(), 'W');
-        assert!((dms.get_seconds() - secs).abs() < 1E-3);
+        assert_eq!(dms.degrees, 73); // NY
+        assert_eq!(dms.minutes, 56); // NY
+        assert_eq!(dms.bearing, 'W');
+        assert!((dms.seconds - secs).abs() < 1E-3);
         let dms = DMS::from_decimal_degrees(151.209900_f64, false); // SYDNEY (lon) 
         let secs = 35.64_f64; // SYDNEY
-        assert_eq!(dms.get_degrees(), 151); // SYDNEY
-        assert_eq!(dms.get_minutes(), 12); // SYDNEY
-        assert_eq!(dms.get_bearing(), 'E');
-        assert!((dms.get_seconds() - secs).abs() < 1E-3);
+        assert_eq!(dms.degrees, 151); // SYDNEY
+        assert_eq!(dms.minutes, 12); // SYDNEY
+        assert_eq!(dms.bearing, 'E');
+        assert!((dms.seconds - secs).abs() < 1E-3);
         let dms = DMS::from_decimal_degrees(-34.603722, true); // Buenos Aires (lon) 
         let secs = 13.3992_f64; // Buenos Aires 
-        assert_eq!(dms.get_degrees(), 34); 
-        assert_eq!(dms.get_minutes(), 36); 
-        assert_eq!(dms.get_bearing(), 'S');
-        assert!((dms.get_seconds() - secs).abs() < 1E-3)
+        assert_eq!(dms.degrees, 34); 
+        assert_eq!(dms.minutes, 36); 
+        assert_eq!(dms.bearing, 'S');
+        assert!((dms.seconds - secs).abs() < 1E-3)
     }
 
     #[test]
@@ -281,10 +256,10 @@ mod tests {
         let lon = DMS::new(30, 40, 200.0_f64, 'E')
             .unwrap();
         let dms = DMS3d::new(lat, lon, Some(150.0_f64)); 
-        assert_eq!(dms.latitude.get_degrees(), 10);
-        assert_eq!(dms.latitude.get_minutes(), 20);
-        assert_eq!(dms.longitude.get_degrees(), 30);
-        assert_eq!(dms.longitude.get_minutes(), 40);
+        assert_eq!(dms.latitude.degrees, 10);
+        assert_eq!(dms.latitude.minutes, 20);
+        assert_eq!(dms.longitude.degrees, 30);
+        assert_eq!(dms.longitude.minutes, 40);
         assert_eq!(dms.altitude, Some(150.0_f64));
     }
 
@@ -295,14 +270,14 @@ mod tests {
             -73.935242_f64, // NY
             Some(10.0)
         );
-        assert_eq!(dms.latitude.get_degrees(), 40); // NY
-        assert_eq!(dms.latitude.get_minutes(), 43); // NY
-        assert_eq!(dms.latitude.get_bearing(), 'N');
-        assert!((dms.latitude.get_seconds() - 50.1960).abs() < 1E-3);
-        assert_eq!(dms.longitude.get_degrees(), 73); // NY
-        assert_eq!(dms.longitude.get_minutes(), 56); // NY
-        assert_eq!(dms.longitude.get_bearing(), 'W');
-        assert!((dms.longitude.get_seconds() - 6.8712).abs() < 1E-3);
+        assert_eq!(dms.latitude.degrees, 40); // NY
+        assert_eq!(dms.latitude.minutes, 43); // NY
+        assert_eq!(dms.latitude.bearing, 'N');
+        assert!((dms.latitude.seconds - 50.1960).abs() < 1E-3);
+        assert_eq!(dms.longitude.degrees, 73); // NY
+        assert_eq!(dms.longitude.minutes, 56); // NY
+        assert_eq!(dms.longitude.bearing, 'W');
+        assert!((dms.longitude.seconds - 6.8712).abs() < 1E-3);
     }
 
     #[test]

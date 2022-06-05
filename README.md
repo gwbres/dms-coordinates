@@ -16,18 +16,18 @@ Single coordinate:
 let dms = DMS::new(40, 43, 50.196_f64, 'N') // NY latitude
     .unwrap();
 prinln!("{:#?}", dms);
-prinln!("{}", dms.get_degrees());
+prinln!("{}", dms.degrees);
 prinln!("{}", dms.to_decimal_degrees());
-prinln!("{}", dms.get_bearing());
+prinln!("{}", dms.bearing);
 ```
 
 Build D°M'S'' from decimal degrees coordinates
 ```rust
 let dms = DMS::from_decimal_degrees(-73.935242_f64); // NY longitude
-println!("{}", dms.get_seconds());
-assert_eq!(dms.get_bearing(), 'N'); // 'N' bearing
-assert_eq!(dms.get_degrees(), 73); // NY::lon D°
-assert_eq!(dms.get_minutes(), 56); // NY::lon M'
+println!("{}", dms.seconds);
+assert_eq!(dms.bearing, 'N'); // 'N' bearing
+assert_eq!(dms.degrees, 73); // NY::lon D°
+assert_eq!(dms.minutes, 56); // NY::lon M'
 ```
 
 3D coordinates
@@ -38,14 +38,14 @@ let dms = DMS3d::from_decimal_degrees(
     -73.935242_f64, // NY
     Some(10.0)
 );
-assert_eq!(dms.latitude.get_degrees(), 40); // NY
-assert_eq!(dms.latitude.get_minutes(), 43); // NY
-assert_eq!(dms.latitude.get_bearing(), 'N');
-assert!((dms.latitude.get_seconds() - 50.1960).abs() < 1E-3);
-assert_eq!(dms.longitude.get_degrees(), 73); // NY
-assert_eq!(dms.longitude.get_minutes(), 56); // NY
-assert_eq!(dms.longitude.get_bearing(), 'W');
-assert!((dms.longitude.get_seconds() - 6.8712).abs() < 1E-3);
+assert_eq!(dms.latitude.degrees, 40); // NY
+assert_eq!(dms.latitude.minutes, 43); // NY
+assert_eq!(dms.latitude.bearing, 'N');
+assert!((dms.latitude.seconds - 50.1960).abs() < 1E-3);
+assert_eq!(dms.longitude.degrees, 73); // NY
+assert_eq!(dms.longitude.minutes, 56); // NY
+assert_eq!(dms.longitude.bearing, 'W');
+assert!((dms.longitude.seconds - 6.8712).abs() < 1E-3);
 ```
 
 (Projected) Distance (m) between two 3D coordinates:
