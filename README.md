@@ -85,7 +85,9 @@ let dist_km = new_york.distance(paris) / 1000.0;
 assert!((5831.0 - dist_km).abs() < 1.0);
 ```
 
-Azimuth - Angle in [°], between Self and targetted waypoint
+Azimuth (angle in [°], where 0 <= x < 359.9), between Self and targetted waypoint.
+Azimuth is the angle between target and straigh line to North Pole.
 ```rust
 let angle = new_york.azimuth(paris);
+assert!((angle - 53.74).abs() < 0.01);
 ```
