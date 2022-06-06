@@ -183,7 +183,8 @@ impl DMS {
         }
     }
     
-    // Converts self to azimuth angle (D°[0:360],M',S'')
+    // Converts Self to azimuth angle (D°[0:360],M',S''),
+    // returns that angle in (degree,minutes,seconds) form
     pub fn to_azimuth (self) -> (i32,i32,f64) {
         let dms: DMS = match self.bearing.as_str() {
             "SE" => DMS::from_azimuth((180,0,0.0)) - self,
@@ -256,6 +257,15 @@ impl DMS3d {
         }
     }
 
+    /// Builds 3D D°M'S'' object from given Cartesian coordinates
+    pub fn from_cartesian (xyz: rust_3d::Point3D) -> DMS3d {
+        DMS3d {
+            latitude: DMS::from_decimal_degrees(map_3d::rad2deg((xyz.z / EARTH_RADIUS).asin()), true),
+            longitude: DMS::from_decimal_degrees(map_3d::rad2deg(xyz.y.atan2(xyz.x)), false),
+            altitude: Some(xyz.z),
+        }
+    }
+
     /// Returns distance [m] between Self and given coordinates
     pub fn distance (&self, other: DMS3d) -> f64 {
         projected_distance(
@@ -276,6 +286,19 @@ impl DMS3d {
         let y = dlambda.sin() * phi2.cos();
         let x = phi1.cos() * phi2.sin() - phi1.sin() * phi2.cos() * dlambda.cos();
         map_3d::rad2deg(y.atan2(x))
+    }
+
+    // Converts Self to Cartesian Coordinates (x,y,z)
+    // where x=0,y=0,z=0 is Earth Center.
+    pub fn to_cartesian (&self) -> rust_3d::Point3D {
+        let (lat, lon) = (
+            self.latitude.to_decimal_degrees(),
+            self.longitude.to_decimal_degrees());
+        rust_3d::Point3D {
+            x: EARTH_RADIUS * lat.cos() * lon.cos(),
+            y: EARTH_RADIUS * lat.cos() * lon.sin(),
+            z: EARTH_RADIUS * lat.sin(),
+        }
     }
     
     /// Writes self into .gpx file
@@ -308,6 +331,56 @@ impl DMS3d {
                 }
             },
             Err(_) => Err(Error::GpxParsingError)
+        }
+    }
+}
+
+impl std::ops::Add for DMS3d {
+    type Output = DMS3d;
+    fn add (self, rhs: Self) -> Self {
+        let altitude : Option<f64> = match self.altitude {
+            Some(altitude) => {
+                match rhs.altitude {
+                    Some(a) => Some(altitude + a),
+                    None => Some(altitude),
+                }
+            },
+            None => {
+                match rhs.altitude {
+                    Some(a) => Some(a),
+                    None => None, 
+                }
+            },
+        };
+        DMS3d { 
+            latitude : self.latitude + rhs.latitude,
+            longitude: self.longitude + rhs.longitude, 
+            altitude: altitude, 
+        }
+    }
+}
+
+impl std::ops::Sub for DMS3d {
+    type Output = DMS3d;
+    fn sub (self, rhs: Self) -> Self {
+        let altitude : Option<f64> = match self.altitude {
+            Some(altitude) => {
+                match rhs.altitude {
+                    Some(a) => Some(altitude - a),
+                    None => Some(altitude),
+                }
+            },
+            None => {
+                match rhs.altitude {
+                    Some(a) => Some(-a),
+                    None => None, 
+                }
+            },
+        };
+        DMS3d { 
+            latitude : self.latitude - rhs.latitude,
+            longitude: self.longitude - rhs.longitude, 
+            altitude: altitude,
         }
     }
 }
@@ -445,6 +518,16 @@ mod tests {
         let expected = 53.78;
         //assert!((expected - dms1.azimuth(dms2)) < 0.1)
         assert_eq!(dms1.azimuth(dms2), expected)
+    }
+    
+    #[test]
+    fn test_to_cartesian() {
+        assert_eq!(
+            DMS3d::from_decimal_degrees(
+                40.73,
+                -73.93,
+                None).to_cartesian(),
+            rust_3d::Point3D::new(0.0,0.0,0.0))
     }
 
     #[test]
