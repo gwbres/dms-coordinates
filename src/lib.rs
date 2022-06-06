@@ -5,15 +5,62 @@
 use thiserror::Error;
 use serde_derive::{Serialize, Deserialize};
 
-/// List of known bearings to construct a `D°M'S''`
-pub const KNOWN_BEARINGS: &'static [&str] = &[
-    "N", "NE", "NW",
-    "S", "SE", "SW",
-    "E", "W",
-];
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize)]
+pub enum Bearing {
+    North,
+    NorthEast,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest,
+    East,
+}
 
-/// Earth radius (m)
-pub const EARTH_RADIUS: f64 = 6371E3_f64;
+impl std::fmt::Display for Bearing {
+    fn fmt (&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Bearing::North => write!(f, "N"),
+            Bearing::NorthEast => write!(f, "NE"),
+            Bearing::NorthWest => write!(f, "NW"),
+            Bearing::South => write!(f, "S"),
+            Bearing::SouthEast => write!(f, "SE"),
+            Bearing::SouthWest => write!(f, "SW"),
+            Bearing::East => write!(f, "E"),
+            Bearing::West => write!(f, "W"),
+        }
+    }
+}
+
+impl Bearing {
+    pub fn is_northern (&self) -> bool {
+        match self {
+            Bearing::North | Bearing::NorthEast | Bearing::NorthWest => true,
+            _ => false,
+        }
+    }
+    pub fn is_southern (&self) -> bool {
+        match self {
+            Bearing::South | Bearing::SouthEast | Bearing::SouthWest => true,
+            _ => false,
+        }
+    }
+    pub fn is_eastern (&self) -> bool {
+        match self {
+            Bearing::East | Bearing::NorthEast | Bearing::SouthEast => true,
+            _ => false,
+        }
+    }
+    pub fn is_western (&self) -> bool {
+        match self {
+            Bearing::West | Bearing::NorthWest | Bearing::SouthWest => true,
+            _ => false,
+        }
+    }
+}
+
+const R : f64 = initial_conditions::EARTH_RADIUS; // [m]
 
 /// Returns distance (m) between two decimal degrees coordinates
 /// coord1: (lat,lon), coord2: (lat, lon)
@@ -24,7 +71,7 @@ pub fn projected_distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
         + map_3d::deg2rad(coord1.0).cos() * map_3d::deg2rad(coord2.0).cos()
             * (d_lambda/2.0_f64).sin().powf(2.0_f64);
     let c = 2.0_f64 * a.powf(0.5_f64).atan2((1.0-a).powf(0.5_f64));
-    EARTH_RADIUS * c
+    R * c
 }
 
 /// `DMS` Structure to manipulate
@@ -36,11 +83,11 @@ pub struct DMS {
     pub degrees: i32,
     pub minutes: i32,
     pub seconds: f64,
-    pub bearing: String,
+    pub bearing: Bearing,
 }
 
 impl std::fmt::Display for DMS {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt (&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}°{}'{}''{}", 
             self.degrees, 
             self.minutes, 
@@ -53,27 +100,15 @@ impl Default for DMS {
     fn default() -> DMS { DMS::from_decimal_degrees(0.0_f64, false) }
 }
 
-impl From<f32> for DMS {
-    fn from (item: f32) -> Self {
-        Self::from_decimal_degrees(item as f64, true)
+impl Into<f32> for DMS {
+    fn into (self) -> f32 {
+        self.to_decimal_degrees() as f32
     }
 }
 
-impl From<(f32,bool)> for DMS {
-    fn from (item: (f32,bool)) -> Self {
-        Self::from_decimal_degrees(item.0 as f64, item.1)
-    }
-}
-
-impl From<f64> for DMS {
-    fn from (item: f64) -> Self {
-        Self::from_decimal_degrees(item, true)
-    }
-}
-
-impl From<(f64,bool)> for DMS {
-    fn from (item: (f64,bool)) -> Self {
-        Self::from_decimal_degrees(item.0, item.1)
+impl Into<f64> for DMS {
+    fn into (self) -> f64 {
+        self.to_decimal_degrees()
     }
 }
 
@@ -119,38 +154,35 @@ impl std::ops::Sub for DMS {
 
 impl DMS {
     /// Builds a `D°M'S''` structure 
-    pub fn new (degrees: i32, minutes: i32, seconds: f64, bearing: &str) -> Result<DMS, std::io::Error> {
-        if !KNOWN_BEARINGS.contains(&bearing) {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData,"Invalid bearing value"))
-        }
-        Ok(DMS {
+    pub fn new (degrees: i32, minutes: i32, seconds: f64, bearing: Bearing) -> DMS {
+        DMS {
             degrees, 
             minutes, 
             seconds, 
-            bearing: bearing.to_string(),
-        })
+            bearing,
+        }
     }
 
     /// Buils a `D°M'S''` structure from given decimal coordinates. 
-    /// Set `is_lat` to `true` if this describes a latitude,
+    /// Set `is_latitude` to `true` if this describes a latitude,
     /// otherwise longitude is assumed.
-    pub fn from_decimal_degrees (ddeg: f64, is_lat: bool) -> DMS {
+    pub fn from_decimal_degrees (ddeg: f64, is_latitude: bool) -> DMS {
         let d = ddeg.abs().trunc() as i32;
         let m = ((ddeg.abs() - d as f64) * 60.0).trunc() as i32;
         let s = (ddeg.abs() - d as f64 - (m as f64)/60.0_f64) * 3600.0_f64;
-        let bearing = match is_lat {
+        let bearing = match is_latitude {
             true => {
                 if ddeg < 0.0 {
-                    "S"
+                    Bearing::South
                 } else {
-                    "N"
+                    Bearing::North
                 }
             },
             false => {
                 if ddeg < 0.0 {
-                    "W"
+                    Bearing::West
                 } else {
-                    "E"
+                    Bearing::East
                 }
             },
         };
@@ -158,7 +190,7 @@ impl DMS {
             degrees: d,  
             minutes: m, 
             seconds: s,
-            bearing: bearing.to_string(),
+            bearing,
         }
     }
 
@@ -167,7 +199,7 @@ impl DMS {
         let ddeg: f64 = self.degrees as f64
             + self.minutes as f64 / 60.0_f64
             + self.seconds as f64 / 3600.0_f64;
-        if self.bearing.contains("S") | self.bearing.contains("W") {
+        if self.bearing.is_southern() || self.bearing.is_western() {
             -ddeg
         } else {
             ddeg
@@ -185,28 +217,28 @@ impl DMS {
                 degrees,
                 minutes,
                 seconds,
-                bearing: String::from("NE"),
+                bearing: Bearing::NorthEast,
             }
         } else if degrees < 180 {
             DMS {
                 degrees: 180 - degrees,
                 minutes,
                 seconds,
-                bearing: String::from("SE"),
+                bearing: Bearing::SouthEast,
             }
         } else if degrees < 270 {
             DMS {
                 degrees: degrees - 180,
                 minutes,
                 seconds,
-                bearing: String::from("SW"),
+                bearing: Bearing::SouthWest,
             }
         } else {
             DMS {
                 degrees: 360 - degrees,
                 minutes,
                 seconds,
-                bearing: String::from("NW"),
+                bearing: Bearing::NorthWest,
             }
         }
     }
@@ -214,11 +246,11 @@ impl DMS {
     // Converts Self to azimuth angle (D°[0:360],M',S''),
     // returns that angle in (degree,minutes,seconds) form
     pub fn to_azimuth (self) -> (i32,i32,f64) {
-        let dms: DMS = match self.bearing.as_str() {
-            "SE" => DMS::from_azimuth((180,0,0.0)) - self,
-            "SW" => DMS::from_azimuth((180,0,0.0)) + self,
-            "NW" => DMS::from_azimuth((360,0,0.0)) - self,
-            "NE" | _ => self,
+        let dms: DMS = match self.bearing {
+            Bearing::SouthEast => DMS::from_azimuth((180,0,0.0)) - self,
+            Bearing::SouthWest => DMS::from_azimuth((180,0,0.0)) + self,
+            Bearing::NorthWest => DMS::from_azimuth((360,0,0.0)) - self,
+            _ => self,
         };
         (dms.degrees,dms.minutes,dms.seconds)
     }
@@ -284,7 +316,7 @@ impl DMS3d {
     /// Builds 3D D°M'S'' object from given Cartesian coordinates
     pub fn from_cartesian (xyz: rust_3d::Point3D) -> DMS3d {
         DMS3d {
-            latitude: DMS::from_decimal_degrees(map_3d::rad2deg((xyz.z / EARTH_RADIUS).asin()), true),
+            latitude: DMS::from_decimal_degrees(map_3d::rad2deg((xyz.z / R).asin()), true),
             longitude: DMS::from_decimal_degrees(map_3d::rad2deg(xyz.y.atan2(xyz.x)), false),
             altitude: Some(xyz.z),
         }
@@ -319,9 +351,9 @@ impl DMS3d {
             self.latitude.to_decimal_degrees(),
             self.longitude.to_decimal_degrees());
         rust_3d::Point3D {
-            x: EARTH_RADIUS * lat.cos() * lon.cos(),
-            y: EARTH_RADIUS * lat.cos() * lon.sin(),
-            z: EARTH_RADIUS * lat.sin(),
+            x: R * lat.cos() * lon.cos(),
+            y: R * lat.cos() * lon.sin(),
+            z: R * lat.sin(),
         }
     }
     
@@ -419,25 +451,56 @@ impl From<rust_3d::Point3D> for DMS3d {
 mod tests {
     use super::*;
     #[test]
-    fn test_dms() {
-        let dms = DMS::new(10, 20, 100.0_f64, "N");
-        assert_eq!(dms.is_err(), false); // valid values
-        let dms = dms.unwrap();
-        assert_eq!(dms.degrees, 10);
-        assert_eq!(dms.minutes, 20);
-        assert_eq!(dms.seconds, 100.0_f64);
-        assert_eq!(dms.bearing, "N");
-        let dms = DMS::new(10, 20, 100.0_f64, "C");
-        assert_eq!(dms.is_err(), true); // non valid values
+    fn test_is_northern() {
+        assert_eq!(Bearing::North.is_northern(), true);
+        assert_eq!(Bearing::NorthEast.is_northern(), true);
+        assert_eq!(Bearing::NorthWest.is_northern(), true);
+        assert_eq!(Bearing::South.is_northern(), false);
+        assert_eq!(Bearing::SouthEast.is_northern(), false);
+        assert_eq!(Bearing::SouthWest.is_northern(), false);
+        assert_eq!(Bearing::East.is_northern(), false);
+        assert_eq!(Bearing::West.is_northern(), false);
     }
-    
+    #[test]
+    fn test_is_southern() {
+        assert_eq!(Bearing::North.is_southern(), false);
+        assert_eq!(Bearing::NorthEast.is_southern(), false);
+        assert_eq!(Bearing::NorthWest.is_southern(), false);
+        assert_eq!(Bearing::South.is_southern(), true);
+        assert_eq!(Bearing::SouthEast.is_southern(), true);
+        assert_eq!(Bearing::SouthWest.is_southern(), true);
+        assert_eq!(Bearing::East.is_southern(), false);
+        assert_eq!(Bearing::West.is_southern(), false);
+    }
+    #[test]
+    fn test_is_eastern() {
+        assert_eq!(Bearing::North.is_eastern(), false);
+        assert_eq!(Bearing::NorthEast.is_eastern(), true);
+        assert_eq!(Bearing::NorthWest.is_eastern(), false);
+        assert_eq!(Bearing::South.is_eastern(), false);
+        assert_eq!(Bearing::SouthEast.is_eastern(), true);
+        assert_eq!(Bearing::SouthWest.is_eastern(), false);
+        assert_eq!(Bearing::East.is_eastern(), true);
+        assert_eq!(Bearing::West.is_eastern(), false);
+    }
+    #[test]
+    fn test_is_western() {
+        assert_eq!(Bearing::North.is_western(), false);
+        assert_eq!(Bearing::NorthEast.is_western(), false);
+        assert_eq!(Bearing::NorthWest.is_western(), true);
+        assert_eq!(Bearing::South.is_western(), false);
+        assert_eq!(Bearing::SouthEast.is_western(), false);
+        assert_eq!(Bearing::SouthWest.is_western(), true);
+        assert_eq!(Bearing::East.is_western(), false);
+        assert_eq!(Bearing::West.is_western(), true);
+    }
     #[test]
     fn test_dms_to_ddeg_conversion() {
-        let dms = DMS::new(40, 43, 50.196_f64, "N").unwrap(); // NY (lat)
+        let dms = DMS::new(40, 43, 50.196_f64, Bearing::North); // NY (lat)
         let lat = dms.to_decimal_degrees();
         let expected_lat = 40.730; // NY
         assert!((lat - expected_lat).abs() < 1E-3);
-        let dms = DMS::new(33, 51, 45.36_f64, "S").unwrap(); // SYDNEY (lat)
+        let dms = DMS::new(33, 51, 45.36_f64, Bearing::North); // SYDNEY (lat)
         let lat = dms.to_decimal_degrees();
         let expected_lat = -33.867; // SYDNEY 
         assert!((lat - expected_lat).abs() < 1E-2)
@@ -449,19 +512,19 @@ mod tests {
         let secs = 6.8712_f64; // NY
         assert_eq!(dms.degrees, 73); // NY
         assert_eq!(dms.minutes, 56); // NY
-        assert_eq!(dms.bearing, "W");
+        assert_eq!(dms.bearing, Bearing::West);
         assert!((dms.seconds - secs).abs() < 1E-3);
         let dms = DMS::from_decimal_degrees(151.209900_f64, false); // SYDNEY (lon) 
         let secs = 35.64_f64; // SYDNEY
         assert_eq!(dms.degrees, 151); // SYDNEY
         assert_eq!(dms.minutes, 12); // SYDNEY
-        assert_eq!(dms.bearing, "E");
+        assert_eq!(dms.bearing, Bearing::East);
         assert!((dms.seconds - secs).abs() < 1E-3);
         let dms = DMS::from_decimal_degrees(-34.603722, true); // Buenos Aires (lon) 
         let secs = 13.3992_f64; // Buenos Aires 
         assert_eq!(dms.degrees, 34); 
         assert_eq!(dms.minutes, 36); 
-        assert_eq!(dms.bearing, "S");
+        assert_eq!(dms.bearing, Bearing::South);
         assert!((dms.seconds - secs).abs() < 1E-3)
     }
 
@@ -473,7 +536,7 @@ mod tests {
                 degrees: 45,
                 minutes: 0,
                 seconds: 0.0,
-                bearing: String::from("SE"),
+                bearing: Bearing::SouthEast,
             });
         assert_eq!(
             DMS::from_azimuth((270,0,0.0)),
@@ -481,22 +544,8 @@ mod tests {
                 degrees: 90,
                 minutes: 0,
                 seconds: 0.0,
-                bearing: String::from("NW"),
+                bearing: Bearing::NorthWest,
             });
-    }
-
-    #[test]
-    fn test_3ddms() {
-        let lat = DMS::new(10, 20, 100.0_f64, "N")
-            .unwrap();
-        let lon = DMS::new(30, 40, 200.0_f64, "E")
-            .unwrap();
-        let dms = DMS3d::new(lat, lon, Some(150.0_f64)); 
-        assert_eq!(dms.latitude.degrees, 10);
-        assert_eq!(dms.latitude.minutes, 20);
-        assert_eq!(dms.longitude.degrees, 30);
-        assert_eq!(dms.longitude.minutes, 40);
-        assert_eq!(dms.altitude, Some(150.0_f64));
     }
 
     #[test]
@@ -508,11 +557,11 @@ mod tests {
         );
         assert_eq!(dms.latitude.degrees, 40); // NY
         assert_eq!(dms.latitude.minutes, 43); // NY
-        assert_eq!(dms.latitude.bearing, "N");
+        assert_eq!(dms.latitude.bearing, Bearing::North);
         assert!((dms.latitude.seconds - 50.1960).abs() < 1E-3);
         assert_eq!(dms.longitude.degrees, 73); // NY
         assert_eq!(dms.longitude.minutes, 56); // NY
-        assert_eq!(dms.longitude.bearing, "W");
+        assert_eq!(dms.longitude.bearing, Bearing::West);
         assert!((dms.longitude.seconds - 6.8712).abs() < 1E-3);
     }
 

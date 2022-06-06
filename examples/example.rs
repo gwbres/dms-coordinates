@@ -1,8 +1,7 @@
-use dms_coordinates::{DMS,DMS3d};
+use dms_coordinates::{Bearing, DMS, DMS3d};
 
 fn main() {
-    let ny = DMS::new(40, 43, 50.196, "N") // New York (lat)
-        .unwrap();
+    let ny = DMS::new(40, 43, 50.196, Bearing::North); // New York (lat)
     // internal attributes
     let (deg, min, sec) = (ny.degrees, ny.minutes, ny.seconds);
     let _bearing = &ny.bearing;
@@ -12,8 +11,6 @@ fn main() {
     println!("Decimal Degrees {}", ddeg); 
     let dms = DMS::from_decimal_degrees(ddeg, true);
     println!("{} || {}", ny, dms);
-
-    let ddeg = (40.73_f32, true); // NY latitude
-    let dms = DMS::from(ddeg);
-    println!("{}", dms);
+    let ddeg : f32 = dms.into();
+    println!("{}", ddeg);
 }
