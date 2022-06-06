@@ -49,6 +49,34 @@ impl std::fmt::Display for DMS {
     }
 }
 
+impl Default for DMS {
+    fn default() -> DMS { DMS::from_decimal_degrees(0.0_f64, false) }
+}
+
+impl From<f32> for DMS {
+    fn from (item: f32) -> Self {
+        Self::from_decimal_degrees(item as f64, true)
+    }
+}
+
+impl From<(f32,bool)> for DMS {
+    fn from (item: (f32,bool)) -> Self {
+        Self::from_decimal_degrees(item.0 as f64, item.1)
+    }
+}
+
+impl From<f64> for DMS {
+    fn from (item: f64) -> Self {
+        Self::from_decimal_degrees(item, true)
+    }
+}
+
+impl From<(f64,bool)> for DMS {
+    fn from (item: (f64,bool)) -> Self {
+        Self::from_decimal_degrees(item.0, item.1)
+    }
+}
+
 impl std::ops::Add for DMS {
     type Output = DMS;
     fn add (self, rhs: Self) -> Self {
@@ -225,10 +253,6 @@ impl std::fmt::Display for DMS3d {
     }
 }
 
-impl Default for DMS {
-    fn default() -> DMS { DMS::from_decimal_degrees(0.0_f64, false) }
-}
-
 impl Default for DMS3d {
     fn default() -> Self {
         Self {
@@ -382,6 +406,12 @@ impl std::ops::Sub for DMS3d {
             longitude: self.longitude - rhs.longitude, 
             altitude: altitude,
         }
+    }
+}
+
+impl From<rust_3d::Point3D> for DMS3d {
+    fn from (item: rust_3d::Point3D) -> Self {
+        Self::from_cartesian(item)
     }
 }
 
