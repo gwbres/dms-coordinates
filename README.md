@@ -16,40 +16,60 @@ Single coordinate:
 let dms = DMS::new(40, 43, 50.196_f64, 'N') // NY latitude
     .unwrap();
 prinln!("{:#?}", dms);
-prinln!("{}", dms.degrees);
-prinln!("{}", dms.to_decimal_degrees());
-prinln!("{}", dms.bearing);
+// internal attributes
+let (deg, min, sec) = (dms.degrees, dms.minutes, dms.seconds);
+let bearing = dms.bearing;
+// convert to decimal degrees
+let ddeg = dms.to_decimal_degrees();
 ```
 
-Build D°M'S'' from decimal degrees coordinates
+Build D°M'S'' from decimal degrees coordinates:
 ```rust
-let dms = DMS::from_decimal_degrees(-73.935242_f64); // NY longitude
-println!("{}", dms.seconds);
-assert_eq!(dms.bearing, 'N'); // 'N' bearing
-assert_eq!(dms.degrees, 73); // NY::lon D°
-assert_eq!(dms.minutes, 56); // NY::lon M'
+let dms = DMS::from_decimal_degrees(-73.935242_f64);
+// internal attributes
+let (deg, min, sec) = (dms.degrees, dms.minutes, dms.seconds);
+assert_eq!(dms.bearing, 'N'); // NY longitude bearing
+assert_eq!(dms.degrees, 73); // NY longitude D°
+assert_eq!(dms.minutes, 56); // NY longitude M'
 ```
 
-3D coordinates
+D°M'S'' to Azimuth conversion: azimuth
+is still expressed as D°M'S'' but 0 <= D° < 360
+and bearing is dropped:
+```rust
+let dms = DMS::from_decimal_degrees(-73.935242_f64);
+let (deg, min, sec) = dms.to_azimuth(); 
+```
+
+Convenient arithmetics over D°M'S'' objects:
+```rust
+let p1 = DMS::from_decimal_degrees(-73.93); // NY longitude
+let p2 = DMS::from_decimal_degrees(-74.0);
+let p3 = p1 + p2;
+let p4 = p2 - p1;
+```
+
+3D coordinates, to represent a Latitude, a Longitude
+and optionnal Altitude information:
 
 ```rust
 let dms = DMS3d::from_decimal_degrees(
     40.730610_f64, // NY
     -73.935242_f64, // NY
-    Some(10.0)
+    Some(10.0) // Altitude
 );
-assert_eq!(dms.latitude.degrees, 40); // NY
-assert_eq!(dms.latitude.minutes, 43); // NY
+// Testing New York attributes:
+assert_eq!(dms.latitude.degrees, 40);
+assert_eq!(dms.latitude.minutes, 43);
 assert_eq!(dms.latitude.bearing, 'N');
 assert!((dms.latitude.seconds - 50.1960).abs() < 1E-3);
-assert_eq!(dms.longitude.degrees, 73); // NY
-assert_eq!(dms.longitude.minutes, 56); // NY
+assert_eq!(dms.longitude.degrees, 73);
+assert_eq!(dms.longitude.minutes, 56);
 assert_eq!(dms.longitude.bearing, 'W');
 assert!((dms.longitude.seconds - 6.8712).abs() < 1E-3);
 ```
 
-(Projected) Distance (m) between two 3D coordinates:
-
+Distance (in [m]) between two 3D coordinates:
 ```rust
 let new_york = DMS3d::from_decimal_degrees(
     40.730610_f64,
@@ -61,5 +81,11 @@ let paris = DMS3d::from_decimal_degrees(
     2.3522219,
     Some(10.0)
 );
-println!("{}", new_york.distance(paris) / 1000.0);
+let dist_km = new_york.distance(paris) / 1000.0;
+assert!((5831.0 - dist_km).abs() < 1.0);
+```
+
+Azimuth - Angle in [°], between Self and targetted waypoint
+```rust
+let angle = new_york.azimuth(paris);
 ```
