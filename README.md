@@ -11,14 +11,15 @@ Rust package to manipulate D°M'S'' coordinates.
 ### D°M'S'' Object 
 
 ```rust
-let dms = DMS::new(40, 43, 50.196_f64, 'N') // NY latitude
+let ny = DMS::new(40, 43, 50.196, "N") // New York (lat)
     .unwrap();
-prinln!("{:#?}", dms);
 // internal attributes
-let (deg, min, sec) = (dms.degrees, dms.minutes, dms.seconds);
-let bearing = dms.bearing;
-// convert to decimal degrees
-let ddeg = dms.to_decimal_degrees();
+let (deg, min, sec) = (ny.degrees, ny.minutes, ny.seconds);
+let _bearing = &ny.bearing;
+let ddeg = ny.to_decimal_degrees();
+println!("New York (lat) {}", ny);
+println!("New York - {}° {}' {}''", deg, min, sec);
+println!("Decimal Degrees {}", ddeg); 
 ```
 
 Build D°M'S'' from decimal degrees coordinates:
@@ -27,13 +28,31 @@ Build D°M'S'' from decimal degrees coordinates:
 let dms = DMS::from_decimal_degrees(-73.935242_f64);
 // internal attributes
 let (deg, min, sec) = (dms.degrees, dms.minutes, dms.seconds);
-assert_eq!(dms.bearing, 'N'); // NY longitude bearing
+assert_eq!(dms.bearing, "N"); // NY longitude bearing
 assert_eq!(dms.degrees, 73); // NY longitude D°
 assert_eq!(dms.minutes, 56); // NY longitude M'
 ```
 
-D°M'S'' to Azimuth conversion: azimuth
-is still expressed as D°M'S'' but 0 <= D° < 360
+Convenient casts exist! It is possible to build
+a D°M'S'' from a decimal degrees conveniently:
+```rust
+let ddeg = (40.73_f32, true); // New York Latitude
+let dms = DMS::from(ddeg);
+let ddeg = (40.7306100_f32, true); // accurate++
+let dms = DMS::from(ddeg);
+let ddeg = (-73.93_f32, false); // New York !Longitude!
+let dms = DMS::from(ddeg);
+```
+
+Latitude / Longitude information is needed to deduce a correct bearing.
+When not provided, we assume it is a `latitude`
+```rust
+let ddeg = 40.73_f32; // super lazy
+let dms = DMS::from(ddeg); // NY !Latitude!
+```
+
+Convert D°M'S'' to Azimuth :   
+azimuth is still expressed as D°M'S'' but 0 <= D° < 360
 and bearing is dropped:
 
 ```rust
@@ -72,19 +91,25 @@ assert_eq!(dms.longitude.bearing, 'W');
 assert!((dms.longitude.seconds - 6.8712).abs() < 1E-3);
 ```
 
-Build DMS3D object from two Cartesian (x,y,z) coordinates
+Build DMS3D object from Cartesian (x,y,z) coordinates
 ```rust
-let p0 = rust_3d::Point3D {
+let p = rust_3d::Point3D {
     x: 10.0,
     y: 20.0,
     z: 30.0,
 };
-let p1 = rust_3d::Point3D {
-    x: 40.0,
-    y: 50.0,
-    z: 60.0,
+let dms = DMS3d::from_cartesian(p);
+```
+
+Another way to build from a Cartesian (x,y,z) coordinates,
+is to invoke `from()` directly:
+```rust
+let p = rust_3d::Point3D {
+    x : 10.0,
+    y : 20.0,
+    z : 30.0,
 };
-let dms = DMS3d::from_cartesian(p0, p1);
+let dms3d = DMS3d::from(p); // :) 
 ```
 
 Distance (in [m]) between two 3D coordinates:
