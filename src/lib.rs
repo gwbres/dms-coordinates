@@ -77,7 +77,7 @@ pub fn projected_distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
 /// `DMS` Structure to manipulate
 /// describes an angle ranging from 0° to 90°
 /// and an associated bearing
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS {
     pub degrees: i32,
@@ -194,7 +194,7 @@ impl DMS {
         }
     }
 
-    /// Converts Self to `Decimal Degrees` 
+    /// Converts Self to `Decimal Degrees` WGS84 
     pub fn to_decimal_degrees (&self) -> f64 {
         let ddeg: f64 = self.degrees as f64
             + self.minutes as f64 / 60.0_f64
@@ -258,7 +258,7 @@ impl DMS {
 
 /// `3D D°M'S''` coordinates   
 /// (latitude, longitude, optionnal altitude)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS3d {
    pub latitude: DMS,
@@ -304,7 +304,7 @@ impl DMS3d {
             altitude: altitude,
         }
     }
-    /// Builds a `3D D°M'S''` from given coordinates in decimal degrees
+    /// Builds a `3D D°M'S''` from given coordinates in decimal degrees (WGS84)
     pub fn from_decimal_degrees (lat: f64, lon: f64, altitude: Option<f64>) -> DMS3d {
         DMS3d {
             latitude: DMS::from_decimal_degrees(lat, true),
@@ -334,10 +334,10 @@ impl DMS3d {
     /// between Self & given point.
     /// Azimuth is the angle between North Pole & target
     pub fn azimuth (&self, rhs: Self) -> f64 {
-        let (phi1, phi2) = (self.latitude.to_decimal_degrees(),
-            rhs.latitude.to_decimal_degrees());
-        let (lambda1, lambda2) = (self.longitude.to_decimal_degrees(),
-            rhs.longitude.to_decimal_degrees());
+        let (phi1, phi2) = (map_3d::deg2rad(self.latitude.to_decimal_degrees()),
+            map_3d::deg2rad(rhs.latitude.to_decimal_degrees()));
+        let (lambda1, lambda2) = (map_3d::deg2rad(self.longitude.to_decimal_degrees()),
+            map_3d::deg2rad(rhs.longitude.to_decimal_degrees()));
         let dlambda = lambda2 - lambda1;
         let y = dlambda.sin() * phi2.cos();
         let x = phi1.cos() * phi2.sin() - phi1.sin() * phi2.cos() * dlambda.cos();
@@ -347,9 +347,8 @@ impl DMS3d {
     // Converts Self to Cartesian Coordinates (x,y,z)
     // where x=0,y=0,z=0 is Earth Center.
     pub fn to_cartesian (&self) -> rust_3d::Point3D {
-        let (lat, lon) = (
-            self.latitude.to_decimal_degrees(),
-            self.longitude.to_decimal_degrees());
+        let (lat, lon) = (map_3d::deg2rad(self.latitude.to_decimal_degrees()),
+            map_3d::deg2rad(self.longitude.to_decimal_degrees()));
         rust_3d::Point3D {
             x: R * lat.cos() * lon.cos(),
             y: R * lat.cos() * lon.sin(),
@@ -495,15 +494,19 @@ mod tests {
         assert_eq!(Bearing::West.is_western(), true);
     }
     #[test]
-    fn test_dms_to_ddeg_conversion() {
+    fn test_to_ddeg() {
         let dms = DMS::new(40, 43, 50.196_f64, Bearing::North); // NY (lat)
         let lat = dms.to_decimal_degrees();
-        let expected_lat = 40.730; // NY
-        assert!((lat - expected_lat).abs() < 1E-3);
-        let dms = DMS::new(33, 51, 45.36_f64, Bearing::North); // SYDNEY (lat)
+        let expected = 40.730; // NY
+        assert!((lat - expected).abs() < 1E-3);
+        let ddeg : f64 = dms.into();
+        assert!((ddeg - expected).abs() < 1E-3);
+        let dms = DMS::new(33, 51, 45.36_f64, Bearing::South); // SYDNEY (lat)
         let lat = dms.to_decimal_degrees();
-        let expected_lat = -33.867; // SYDNEY 
-        assert!((lat - expected_lat).abs() < 1E-2)
+        let expected = -33.867; // SYDNEY 
+        assert!((lat - expected).abs() < 1E-2);
+        let ddeg : f64 = dms.into();
+        assert!((ddeg - expected).abs() < 1E-2);
     }
     
     #[test]
@@ -594,19 +597,43 @@ mod tests {
             2.2321,
             None,
         );
-        let expected = 53.78;
-        //assert!((expected - dms1.azimuth(dms2)) < 0.1)
-        assert_eq!(dms1.azimuth(dms2), expected)
+        assert!((53.78 - dms1.azimuth(dms2)) < 0.01);
+        let dms1 = DMS3d::from_decimal_degrees( // Paris 
+            48.85, 
+            2.2321,
+            None,
+        );
+        let dms2 = DMS3d::from_decimal_degrees( // Sydney
+            48.86,
+            2.287,
+            None,
+        );
+        assert!((68.49 - dms1.azimuth(dms2)) < 0.01)
     }
     
     #[test]
     fn test_to_cartesian() {
-        assert_eq!(
-            DMS3d::from_decimal_degrees(
-                40.73,
-                -73.93,
-                None).to_cartesian(),
-            rust_3d::Point3D::new(0.0,0.0,0.0))
+        let coords = DMS3d::from_decimal_degrees(
+            -33.8698439,
+            151.2082848,
+            None).to_cartesian();
+        let xyz = rust_3d::Point3D::new(-4646053.737,2553314.458,-3534283.535);
+        assert!((coords.x/1000.0 - xyz.x/1000.0).abs() < 50.0);
+        assert!((coords.y/1000.0 - xyz.y/1000.0).abs() < 50.0);
+        assert!((coords.z/1000.0 - xyz.z/1000.0).abs() < 50.0);
+    }
+
+    #[test]
+    fn test_from_cartesian() {
+        let xyz = rust_3d::Point3D::new(-4646844.502,2553749.458,-3535154.018);
+        let coords1 = DMS3d::from_decimal_degrees(
+            -33.8698439,
+            151.2082848,
+            None);
+        let cartesian = coords1.to_cartesian();
+        assert!((cartesian.x/1000.0 - xyz.x/1000.0).abs() < 50.0);
+        assert!((cartesian.y/1000.0 - xyz.y/1000.0).abs() < 50.0);
+        assert!((cartesian.z/1000.0 - xyz.z/1000.0).abs() < 50.0);
     }
 
     #[test]
