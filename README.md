@@ -1,5 +1,4 @@
 # DMS Coordinates 
-Rust package to manipulate D°M'S'' coordinates.
 
 [![crates.io](https://img.shields.io/crates/v/dms-coordinates.svg)](https://crates.io/crates/dms-coordinates)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](https://github.com/gwbres/dms-coordinates/blob/main/LICENSE-APACHE)
@@ -8,9 +7,12 @@ Rust package to manipulate D°M'S'' coordinates.
 [![Rust](https://github.com/gwbres/dms-coordinates/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/gwbres/dms-coordinates/actions/workflows/rust.yml)
 [![crates.io](https://docs.rs/dms-coordinates/badge.svg)](https://docs.rs/dms-coordinates/badge.svg)
 
-### D°M'S'' Object 
 
-D°M'S'' represent a coordinates with an associated bearing
+Rust Crate for D°M'S'' coordinates manipulation, used in navigation  :sailboat: :airplane: :ship:
+
+### D°M'S'' 
+
+D°M'S'' represents coordinates with an associated bearing
 
 ```rust
 let ny = DMS::new(40, 43, 50.196, Bearing::North); // New York (lat)
