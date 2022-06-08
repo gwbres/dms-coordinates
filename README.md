@@ -10,9 +10,9 @@
 
 Rust Crate for D°M'S'' coordinates manipulation, used in navigation  :sailboat: :airplane: :ship:
 
-### D°M'S'' 
+### `D°M'S''` 
 
-D°M'S'' represents coordinates with an associated bearing
+`D°M'S''` represents coordinates with an associated bearing
 
 ```rust
 let ny = DMS::new(40, 43, 50.196, Bearing::North); // New York (lat)
@@ -23,7 +23,7 @@ println!("New York (lat) {}", ny);
 println!("New York - {}° {}' {}''", deg, min, sec);
 ```
 
-Build D°M'S'' coordinates from decimal degrees coordinates (WGS84):
+Build `D°M'S''` coordinates from decimal degrees coordinates (`WGS84`):
 
 ```rust
 let dms = DMS::from_decimal_degrees(-73.935242_f64, false);
@@ -32,14 +32,14 @@ assert_eq!(dms.degrees, 73); // NY
 assert_eq!(dms.minutes, 56); // NY 
 ```
 
-Another way to convert to WGS84 is to cast
+Another way to convert to `WGS84` is to cast
 a D°M'S'' into a floating point number:
 ```rust
 let ddeg : f64 = dms.into(); // cast to f64 (prefered)
 let ddeg : f32 = dms.into(); // cast to f32
 ```
 
-Convert D°M'S'' to Azimuth.   
+Convert `D°M'S''` to `Azimuth`.   
 Azimuth is still expressed as D°M'S'' but 0 <= D° < 360
 and bearing is dropped:
 
@@ -47,8 +47,8 @@ and bearing is dropped:
 let (deg, min, sec) = dms.to_azimuth(); 
 ```
 
-Build a D°M'S'' + associated bearing, from an azimuth angle.
-Angle must also be given in D°M'S'' shape, but 0 <= D° < 360:
+Build a `D°M'S''` with associated `bearing`, from an azimuth angle.   
+Angle must also be given in `D°M'S''`, but 0 <= D° < 360:
 ```rust
 let dms = DMS::from_azimuth((135, 0, 0.0)); // 135°0'0''
 let expected = DMS::new(45, 0, 0.0, Bearing::SouthEast); // 45°0'0''SE
@@ -63,16 +63,17 @@ Convenient arithmetics ops are feasible:
 ```rust
 let p1 = DMS::from_decimal_degrees(-73.93, false);
 let p2 = DMS::from_decimal_degrees(-74.0,  false);
-let p3 = p1 + p2; // add 2 points together
-let p4 = p1 * 2; // multiply by integer
-let p5 = p1 / 4; // divide by integer
-let p6 = p1 + 1;   // add an integer: adds 1 second
-let p6 = p1 + 60;   // add an integer: adds 1 minute 
-let p7 = p1 + 1.0; // add a float: adds 1 second 
-let p7 = p1 + 61.0; // add a float: adds 61 seconds
+let p = p1 + p2;
+let p = p1 * 2;
+let p = p1 * 3.14;
+let p = p1 / 4;
+let p = p1 + 1; // adds 1 second
+let p = p1 + 60; // adds 1 minute 
+let p = p1 + 1.0; // adds 1 second 
+let p = p1 + 61.0; // adds 61 seconds
 ```
 
-## DMS3d: 3D coordinates
+## `DMS3d`: 3D coordinates
 
 3D coordinates (Latitude, Longitude & optionnal Altitude):
 
@@ -91,9 +92,9 @@ assert_eq!(dms.longitude.minutes, 56);
 assert!((dms.longitude.seconds - 6.8712).abs() < 1E-3);
 ```
 
-Build DMS3D object from Cartesian (x,y,z) coordinates.
+Build `DMS3D` object from `Cartesian` (x,y,z) coordinates.
 In cartesian coordinates, Earth center is considered as 
-the origin (x=0,y=0,z=0), 
+the origin (x=0, y=0, z=0), 
 longitude = 0 is equator and
 z axis goes through the poles.
 
@@ -106,7 +107,7 @@ let cartesian = rust_3d::Point3D {
 let dms3d = DMS3d::from_cartesian(cartesian);
 ```
 
-Another way to build from a Cartesian (x,y,z) coordinates,
+Another way to build from `Cartesian` (x,y,z) coordinates,
 is to cast  a `rust_3d::Point3D` object into a `DMS3d`:
 ```rust
 let p = rust_3d::Point3D {
@@ -146,7 +147,7 @@ let dist_km = new_york.distance(paris) / 1000.0;
 assert!((5831.0 - dist_km).abs() < 1.0);
 ```
 
-Azimuth (angle in [°], where 0 <= x < 359.9), between Self and targetted waypoint.
+`Azimuth` (angle in [°], where 0 <= x < 359.9), between Self and targetted waypoint.   
 Azimuth is the angle between target and straigh line to North Pole.
 ```rust
 let nyork  = DMS3d::from_decimal_degrees(40.73,-73.93,None);
