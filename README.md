@@ -47,13 +47,29 @@ and bearing is dropped:
 let (deg, min, sec) = dms.to_azimuth(); 
 ```
 
+Build a D°M'S'' + associated bearing, from an azimuth angle.
+Angle must also be given in D°M'S'' shape, but 0 <= D° < 360:
+```rust
+let dms = DMS::from_azimuth((135, 0, 0.0)); // 135°0'0''
+let expected = DMS::new(45, 0, 0.0, Bearing::SouthEast); // 45°0'0''SE
+assert_eq!(dms, expected);
+let dms = DMS::from_azimuth((270, 0, 0.0)); // 270°0'0''
+let expected = DMS::new(90, 0, 0.0, Bearing::NorthWest); // 90°0'0''NW
+assert_eq!(dms, expected);
+```
+
 Convenient arithmetics ops are feasible: 
 
 ```rust
 let p1 = DMS::from_decimal_degrees(-73.93, false);
 let p2 = DMS::from_decimal_degrees(-74.0,  false);
-let p3 = p1 + p2;
-let p4 = p2 - p1;
+let p3 = p1 + p2; // add 2 points together
+let p4 = p1 * 2; // multiply by integer
+let p5 = p1 / 4; // divide by integer
+let p6 = p1 + 1;   // add an integer: adds 1 second
+let p6 = p1 + 60;   // add an integer: adds 1 minute 
+let p7 = p1 + 1.0; // add a float: adds 1 second 
+let p7 = p1 + 61.0; // add a float: adds 61 seconds
 ```
 
 ## DMS3d: 3D coordinates
