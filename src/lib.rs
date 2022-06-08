@@ -80,8 +80,8 @@ pub fn projected_distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS {
-    pub degrees: i32,
-    pub minutes: i32,
+    pub degrees: i16,
+    pub minutes: i16,
     pub seconds: f64,
     pub bearing: Bearing,
 }
@@ -112,7 +112,7 @@ impl Into<f64> for DMS {
     }
 }
 
-impl std::ops::Add for DMS {
+impl std::ops::Add<DMS> for DMS {
     type Output = DMS;
     fn add (self, rhs: Self) -> Self {
         let (d0,m0,s0) = self.to_azimuth();
@@ -120,19 +120,61 @@ impl std::ops::Add for DMS {
         let mut degrees = d0 + d1; 
         let mut minutes = m0 + m1; 
         let mut seconds = s0 + s1;
-        if seconds > 60.0 {
+        if seconds > 59.0 {
             minutes += 1;
             seconds -= 60.0;
         }
-        if minutes > 60 {
+        if minutes > 59 {
             degrees += 1;
             minutes -= 60
         }
-        DMS::from_azimuth((degrees,minutes,seconds))
+        DMS::from_azimuth((degrees, minutes, seconds))
     }
 }
 
-impl std::ops::Sub for DMS {
+impl std::ops::Add<i64> for DMS {
+    type Output = DMS;
+    fn add (self, rhs: i64) -> Self { 
+        let (mut d, mut m, s) = self.to_azimuth();
+        let mut s = (s as i64) + rhs;
+        if s > 60 {
+            s = s % 60;
+            m += (rhs.wrapping_div(60)) as i16;
+            if m > 60 {
+                m = m % 60;
+                d += (rhs / 3600) as i16;
+            }
+        }
+        Self::from_azimuth((d,m,s as f64))
+    }
+}
+
+impl std::ops::Add<i8> for DMS {
+    type Output = DMS;
+    fn add (self, rhs: i8) -> Self { self + rhs as i64 }
+}
+
+impl std::ops::Add<i16> for DMS {
+    type Output = DMS;
+    fn add (self, rhs: i16) -> Self { self + rhs as i16 }
+}
+
+impl std::ops::Add<i32> for DMS {
+    type Output = DMS;
+    fn add (self, rhs: i32) -> Self { self + rhs as i32 }
+}
+
+impl std::ops::Add<f32> for DMS {
+    type Output = DMS;
+    fn add (self, rhs: f32) -> Self { self + rhs as i64 }
+}
+
+impl std::ops::Add<f64> for DMS {
+    type Output = DMS;
+    fn add (self, rhs: f64) -> Self { self + rhs as i64 }
+}
+
+impl std::ops::Sub<DMS> for DMS {
     type Output = DMS;
     fn sub (self, rhs: Self) -> Self {
         let (d0,m0,s0) = self.to_azimuth();
@@ -152,9 +194,127 @@ impl std::ops::Sub for DMS {
     }
 }
 
+impl std::ops::Sub<i8> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: i8) -> Self { self - rhs as i64 }
+}
+
+impl std::ops::Sub<i16> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: i16) -> Self { self - rhs as i64 }
+}
+
+impl std::ops::Sub<i32> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: i32) -> Self { self - rhs as i64 }
+}
+
+impl std::ops::Sub<i64> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: i64) -> Self { self.clone() }
+}
+
+impl std::ops::Sub<f32> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: f32) -> Self { self - rhs as i64 }
+}
+
+impl std::ops::Sub<f64> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: f64) -> Self { self - rhs as i64 }
+}
+
+impl std::ops::Mul for DMS {
+    type Output = DMS;
+    fn mul (self, rhs: Self) -> Self {
+        let (d0,m0,s0) = self.to_azimuth();
+        let (d1,m1,s1) = rhs.to_azimuth();
+        let mut degrees = d0 * d1; 
+        let mut minutes = m0 * m1; 
+        let mut seconds = s0 * s1;
+        if seconds > 60.0 {
+            minutes += 1;
+            seconds -= 60.0;
+        }
+        if minutes > 60 {
+            degrees += 1;
+            minutes -= 60
+        }
+        DMS::from_azimuth((degrees,minutes,seconds))
+    }
+}
+
+impl std::ops::Mul<i8> for DMS {
+    type Output = DMS;
+    fn mul (self, rhs: i8) -> Self { self * (rhs as i64) }
+}
+
+impl std::ops::Mul<i16> for DMS {
+    type Output = DMS;
+    fn mul (self, rhs: i16) -> Self { self * (rhs as i64) }
+}
+
+impl std::ops::Mul<i32> for DMS {
+    type Output = DMS;
+    fn mul (self, rhs: i32) -> Self { self * (rhs as i64) }
+}
+
+impl std::ops::Mul<i64> for DMS {
+    type Output = DMS;
+    fn mul (self, rhs: i64) -> Self { 
+        self * (rhs as i64) 
+    }
+}
+
+impl std::ops::Div for DMS {
+    type Output = DMS;
+    fn div (self, rhs: Self) -> Self {
+        let (d0,m0,s0) = self.to_azimuth();
+        let (d1,m1,s1) = rhs.to_azimuth();
+        let mut degrees = d0 / d1; 
+        let mut minutes = m0 / m1; 
+        let mut seconds = s0 / s1;
+        if degrees < 0 {
+            degrees += 360;
+            minutes -= 1;
+        }
+        if minutes < 0 {
+            minutes += 60;
+            seconds -= 1.0;
+        }
+        DMS::from_azimuth((degrees,minutes,seconds))
+    }
+}
+
+impl std::ops::Div<i8> for DMS {
+    type Output = DMS;
+    fn div (self, rhs: i8) -> Self { self / (rhs as i64) }
+}
+
+impl std::ops::Div<i16> for DMS {
+    type Output = DMS;
+    fn div (self, rhs: i16) -> Self { self / (rhs as i64) }
+}
+
+impl std::ops::Div<i32> for DMS {
+    type Output = DMS;
+    fn div (self, rhs: i32) -> Self { self / (rhs as i64) }
+}
+
+impl std::ops::Div<i64> for DMS {
+    type Output = DMS;
+    fn div (self, rhs: i64) -> Self {
+        let (d0,m0,s0) = self.to_azimuth();
+        let mut degrees = d0 / (rhs as i16); 
+        let mut minutes = m0 / (rhs as i16); 
+        let mut seconds = s0 / rhs as f64;
+        DMS::from_azimuth((degrees,minutes,seconds))
+    }
+}
+
 impl DMS {
     /// Builds a `D°M'S''` structure 
-    pub fn new (degrees: i32, minutes: i32, seconds: f64, bearing: Bearing) -> DMS {
+    pub fn new (degrees: i16, minutes: i16, seconds: f64, bearing: Bearing) -> DMS {
         DMS {
             degrees, 
             minutes, 
@@ -167,8 +327,8 @@ impl DMS {
     /// Set `is_latitude` to `true` if this describes a latitude,
     /// otherwise longitude is assumed.
     pub fn from_decimal_degrees (ddeg: f64, is_latitude: bool) -> DMS {
-        let d = ddeg.abs().trunc() as i32;
-        let m = ((ddeg.abs() - d as f64) * 60.0).trunc() as i32;
+        let d = ddeg.abs().trunc() as i16;
+        let m = ((ddeg.abs() - d as f64) * 60.0).trunc() as i16;
         let s = (ddeg.abs() - d as f64 - (m as f64)/60.0_f64) * 3600.0_f64;
         let bearing = match is_latitude {
             true => {
@@ -208,7 +368,7 @@ impl DMS {
 
     // Builds D°M'S'' structure from given Azimuth (in D° [0:360],M',S'')
     // by deducing appropriate angle & bearing
-    pub fn from_azimuth (azimuth: (i32,i32,f64)) -> DMS {
+    pub fn from_azimuth (azimuth: (i16,i16,f64)) -> DMS {
         let degrees = azimuth.0;
         let minutes = azimuth.1;
         let seconds = azimuth.2;
@@ -245,7 +405,7 @@ impl DMS {
     
     // Converts Self to azimuth angle (D°[0:360],M',S''),
     // returns that angle in (degree,minutes,seconds) form
-    pub fn to_azimuth (self) -> (i32,i32,f64) {
+    pub fn to_azimuth (self) -> (i16,i16,f64) {
         let dms: DMS = match self.bearing {
             Bearing::SouthEast => DMS::from_azimuth((180,0,0.0)) - self,
             Bearing::SouthWest => DMS::from_azimuth((180,0,0.0)) + self,
@@ -508,7 +668,6 @@ mod tests {
         let ddeg : f64 = dms.into();
         assert!((ddeg - expected).abs() < 1E-2);
     }
-    
     #[test]
     fn test_dms_from_ddeg() {
         let dms = DMS::from_decimal_degrees(-73.935242_f64, false); // NY (lon) 
@@ -530,7 +689,6 @@ mod tests {
         assert_eq!(dms.bearing, Bearing::South);
         assert!((dms.seconds - secs).abs() < 1E-3)
     }
-
     #[test]
     fn test_from_azimuth() {
         assert_eq!(
@@ -550,7 +708,83 @@ mod tests {
                 bearing: Bearing::NorthWest,
             });
     }
-
+    #[test]
+    fn test_to_azimuth() {
+        let dms = DMS::new(15,36,45.0,Bearing::East);
+        assert_eq!(dms.to_azimuth(), (15,36,45.0));
+    }
+    #[test]
+    fn test_add_ops() {
+        let p1 = DMS::from_azimuth((71,18,50.0));
+        let p2 = DMS::from_azimuth((83,02,40.0));
+        let p = p1 + p2;
+        let px = DMS::from_azimuth((154,21,30.0));
+        assert_eq!(p, px);
+        let p = p1 + 1;
+        assert_eq!(p, DMS {
+            degrees: 71,
+            minutes: 18,
+            seconds: 51.0,
+            bearing: Bearing::NorthEast,
+        });
+        let p = p1 + 9;
+        assert_eq!(p, DMS {
+            degrees: 71,
+            minutes: 18,
+            seconds: 59.0,
+            bearing: Bearing::NorthEast,
+        });
+        /*let p = p1 + 10;
+        assert_eq!(p, DMS {
+            degrees: 71,
+            minutes: 19,
+            seconds: 1.0,
+            bearing: Bearing::NorthEast,
+        });*/
+        /*let p = p1 + 11;
+        assert_eq!(p, DMS {
+            degrees: 71,
+            minutes: 19,
+            seconds: 2.0,
+            bearing: Bearing::NorthEast,
+        });*/
+        /*let p = p1 + 10 * 60;
+        assert_eq!(p, DMS {
+            degrees: 71,
+            minutes: 28,
+            seconds: 50.0,
+            bearing: Bearing::NorthEast,
+        });
+        let p = p1 + 10 * 60 +10;
+        assert_eq!(p, DMS {
+            degrees: 71,
+            minutes: 29,
+            seconds: 1.0,
+            bearing: Bearing::NorthEast,
+        });*/
+    }
+    #[test]
+    fn test_sub_ops() {
+        let p1 = DMS::from_azimuth((68,45,53.0));
+        let p2 = DMS::from_azimuth((12,40,29.0));
+        let p = p1 - p2;
+        let px = DMS::from_azimuth((56,05,24.0));
+        assert_eq!(p, px);
+    }
+    /*#[test]
+    fn test_mul_ops() {
+        let p1 = DMS::from_azimuth((336,25,15.0));
+        let p = p1 * 2;
+        let px = DMS::from_azimuth((84,06,19.0));
+        assert_eq!(p, px);
+    }*/
+    /*#[test]
+    fn test_div_ops() {
+        let p1 = DMS::from_azimuth((336,25,15.0));
+        let p = p1 / 2;
+        let px = DMS::from_azimuth((84,06,19.0));
+        assert_eq!(p, px);
+    }*/
     #[test]
     fn test_3ddms_from_ddeg() {
         let dms = DMS3d::from_decimal_degrees(
@@ -567,7 +801,6 @@ mod tests {
         assert_eq!(dms.longitude.bearing, Bearing::West);
         assert!((dms.longitude.seconds - 6.8712).abs() < 1E-3);
     }
-
     #[test]
     fn test_distance() {
         let dms1 = DMS3d::from_decimal_degrees( // NY
@@ -584,7 +817,6 @@ mod tests {
         let d_km = dms1.distance(dms2) / 1000.0_f64;
         assert!((expected_km - d_km).abs() < 1.0);
     }
-
     #[test]
     fn test_azimuth() {
         let dms1 = DMS3d::from_decimal_degrees( // NY
@@ -610,7 +842,6 @@ mod tests {
         );
         assert!((68.49 - dms1.azimuth(dms2)) < 0.01)
     }
-    
     #[test]
     fn test_to_cartesian() {
         let coords = DMS3d::from_decimal_degrees(
@@ -622,7 +853,6 @@ mod tests {
         assert!((coords.y/1000.0 - xyz.y/1000.0).abs() < 50.0);
         assert!((coords.z/1000.0 - xyz.z/1000.0).abs() < 50.0);
     }
-
     #[test]
     fn test_from_cartesian() {
         let xyz = rust_3d::Point3D::new(-4646844.502,2553749.458,-3535154.018);
@@ -635,7 +865,6 @@ mod tests {
         assert!((cartesian.y/1000.0 - xyz.y/1000.0).abs() < 50.0);
         assert!((cartesian.z/1000.0 - xyz.z/1000.0).abs() < 50.0);
     }
-
     #[test]
     fn test_to_gpx() {
         let dms = DMS3d::from_decimal_degrees(
