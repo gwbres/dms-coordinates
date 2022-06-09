@@ -26,7 +26,8 @@ println!("New York - {}° {}' {}''", deg, min, sec);
 Build `D°M'S''` coordinates from decimal degrees coordinates (`WGS84`):
 
 ```rust
-let dms = DMS::from_decimal_degrees(-73.935242_f64, false);
+let dms = DMS::from_decimal_degrees(-73.935242_f64, false)
+    .unwrap();
 assert_eq!(dms.bearing, Bearing::West); // NY 
 assert_eq!(dms.degrees, 73); // NY 
 assert_eq!(dms.minutes, 56); // NY 
@@ -50,12 +51,24 @@ let (deg, min, sec) = dms.to_azimuth();
 Build a `D°M'S''` with associated `bearing`, from an azimuth angle.   
 Angle must also be given in `D°M'S''`, but 0 <= D° < 360:
 ```rust
-let dms = DMS::from_azimuth((135, 0, 0.0)); // 135°0'0''
-let expected = DMS::new(45, 0, 0.0, Bearing::SouthEast); // 45°0'0''SE
-assert_eq!(dms, expected);
-let dms = DMS::from_azimuth((270, 0, 0.0)); // 270°0'0''
-let expected = DMS::new(90, 0, 0.0, Bearing::NorthWest); // 90°0'0''NW
-assert_eq!(dms, expected);
+let dms = DMS::from_azimuth((135, 0, 0.0)).unwrap(); // 135°0'0''
+assert_eq!(dms,
+    DMS { // 45°0'0''SE
+        degrees: 45,
+        minutes: 0, 
+        seconds: 0.0, 
+        bearing: Bearing::SouthEast
+    }
+);
+let dms = DMS::from_azimuth((270, 0, 0.0)).unwrap(); // 270°0'0''
+assert_eq!(dms,
+    DMS { // 90°0'0''NW
+        degrees: 90, 
+        minutes: 0, 
+        seconds: 0.0, 
+        bearing: Bearing::NorthWest
+    }
+);
 ```
 
 Convenient arithmetics ops are feasible: 
@@ -83,7 +96,6 @@ let dms = DMS3d::from_decimal_degrees(
     -73.935242_f64, // NY
     Some(10.0) // Altitude
 );
-// Testing New York attributes:
 assert_eq!(dms.latitude.bearing, Bearing::North);
 assert_eq!(dms.latitude.minutes, 43);
 assert!((dms.latitude.seconds - 50.1960).abs() < 1E-3);

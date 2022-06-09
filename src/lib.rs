@@ -3,6 +3,7 @@
 //!
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
 use thiserror::Error;
+use std::io::{ErrorKind};
 use serde_derive::{Serialize, Deserialize};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
@@ -129,6 +130,7 @@ impl std::ops::Add<DMS> for DMS {
             minutes -= 60
         }
         DMS::from_azimuth((degrees, minutes, seconds))
+            .unwrap()
     }
 }
 
@@ -146,6 +148,7 @@ impl std::ops::Add<i64> for DMS {
             }
         }
         Self::from_azimuth((d,m,s as f64))
+            .unwrap()
     }
 }
 
@@ -191,6 +194,7 @@ impl std::ops::Sub<DMS> for DMS {
             seconds -= 1.0;
         }
         DMS::from_azimuth((degrees,minutes,seconds))
+            .unwrap()
     }
 }
 
@@ -241,6 +245,7 @@ impl std::ops::Mul for DMS {
             minutes -= 60
         }
         DMS::from_azimuth((degrees,minutes,seconds))
+            .unwrap()
     }
 }
 
@@ -283,6 +288,7 @@ impl std::ops::Div for DMS {
             seconds -= 1.0;
         }
         DMS::from_azimuth((degrees,minutes,seconds))
+            .unwrap()
     }
 }
 
@@ -309,17 +315,26 @@ impl std::ops::Div<i64> for DMS {
         let mut minutes = m0 / (rhs as i16); 
         let mut seconds = s0 / rhs as f64;
         DMS::from_azimuth((degrees,minutes,seconds))
+            .unwrap()
     }
 }
 
 impl DMS {
     /// Builds a `D°M'S''` structure 
-    pub fn new (degrees: i16, minutes: i16, seconds: f64, bearing: Bearing) -> DMS {
-        DMS {
-            degrees, 
-            minutes, 
-            seconds, 
-            bearing,
+    pub fn new (degrees: i16, minutes: i16, seconds: f64, bearing: Bearing) -> std::io::Result<DMS> {
+        if seconds > 60.0 {
+            Err(std::io::Error::new(ErrorKind::InvalidData, "`seconds` must be < 60"))
+        } else if minutes > 60 {
+            Err(std::io::Error::new(ErrorKind::InvalidData, "`minutes` must be < 60"))
+        } else if degrees > 180 {
+            Err(std::io::Error::new(ErrorKind::InvalidData, "`degrees` must be < 90"))
+        } else {
+            Ok(DMS {
+                degrees, 
+                minutes, 
+                seconds, 
+                bearing,
+            })
         }
     }
 
@@ -368,38 +383,47 @@ impl DMS {
 
     // Builds D°M'S'' structure from given Azimuth (in D° [0:360],M',S'')
     // by deducing appropriate angle & bearing
-    pub fn from_azimuth (azimuth: (i16,i16,f64)) -> DMS {
+    pub fn from_azimuth (azimuth: (i16,i16,f64)) -> std::io::Result<DMS> {
         let degrees = azimuth.0;
         let minutes = azimuth.1;
         let seconds = azimuth.2;
-        if degrees < 90 {
-            DMS {
+        if degrees > 360 {
+            return Err(std::io::Error::new(ErrorKind::InvalidData, "`degrees` must be < 360"))
+        }
+        if minutes > 60  {
+            return Err(std::io::Error::new(ErrorKind::InvalidData, "`minutes` must be < 60"))
+        }
+        if seconds > 60.0  {
+            return Err(std::io::Error::new(ErrorKind::InvalidData, "`seconds` must be < 60"))
+        }
+        if degrees < 90 { 
+            Ok(DMS {
                 degrees,
                 minutes,
                 seconds,
                 bearing: Bearing::NorthEast,
-            }
+            })
         } else if degrees < 180 {
-            DMS {
+            Ok(DMS {
                 degrees: 180 - degrees,
                 minutes,
                 seconds,
                 bearing: Bearing::SouthEast,
-            }
+            })
         } else if degrees < 270 {
-            DMS {
+            Ok(DMS {
                 degrees: degrees - 180,
                 minutes,
                 seconds,
                 bearing: Bearing::SouthWest,
-            }
+            })
         } else {
-            DMS {
+            Ok(DMS {
                 degrees: 360 - degrees,
                 minutes,
                 seconds,
                 bearing: Bearing::NorthWest,
-            }
+            })
         }
     }
     
@@ -407,9 +431,9 @@ impl DMS {
     // returns that angle in (degree,minutes,seconds) form
     pub fn to_azimuth (self) -> (i16,i16,f64) {
         let dms: DMS = match self.bearing {
-            Bearing::SouthEast => DMS::from_azimuth((180,0,0.0)) - self,
-            Bearing::SouthWest => DMS::from_azimuth((180,0,0.0)) + self,
-            Bearing::NorthWest => DMS::from_azimuth((360,0,0.0)) - self,
+            Bearing::SouthEast => DMS::from_azimuth((180,0,0.0)).unwrap() - self,
+            Bearing::SouthWest => DMS::from_azimuth((180,0,0.0)).unwrap() + self,
+            Bearing::NorthWest => DMS::from_azimuth((360,0,0.0)).unwrap() - self,
             _ => self,
         };
         (dms.degrees,dms.minutes,dms.seconds)
@@ -655,13 +679,13 @@ mod tests {
     }
     #[test]
     fn test_to_ddeg() {
-        let dms = DMS::new(40, 43, 50.196_f64, Bearing::North); // NY (lat)
+        let dms = DMS::new(40, 43, 50.196_f64, Bearing::North).unwrap(); // NY (lat)
         let lat = dms.to_decimal_degrees();
         let expected = 40.730; // NY
         assert!((lat - expected).abs() < 1E-3);
         let ddeg : f64 = dms.into();
         assert!((ddeg - expected).abs() < 1E-3);
-        let dms = DMS::new(33, 51, 45.36_f64, Bearing::South); // SYDNEY (lat)
+        let dms = DMS::new(33, 51, 45.36_f64, Bearing::South).unwrap(); // SYDNEY (lat)
         let lat = dms.to_decimal_degrees();
         let expected = -33.867; // SYDNEY 
         assert!((lat - expected).abs() < 1E-2);
@@ -692,7 +716,7 @@ mod tests {
     #[test]
     fn test_from_azimuth() {
         assert_eq!(
-            DMS::from_azimuth((135,0,0.0)),
+            DMS::from_azimuth((135,0,0.0)).unwrap(),
             DMS {
                 degrees: 45,
                 minutes: 0,
@@ -700,25 +724,57 @@ mod tests {
                 bearing: Bearing::SouthEast,
             });
         assert_eq!(
-            DMS::from_azimuth((270,0,0.0)),
+            DMS::from_azimuth((270,0,0.0)).unwrap(),
             DMS {
                 degrees: 90,
                 minutes: 0,
                 seconds: 0.0,
                 bearing: Bearing::NorthWest,
             });
+        assert_eq!(
+            DMS::from_azimuth((85,57,10.0)).unwrap(),
+            DMS {
+                degrees: 85,
+                minutes: 57,
+                seconds: 10.0,
+                bearing: Bearing::NorthEast,
+            });
+        assert_eq!(
+            DMS::from_azimuth((146,29,37.0)).unwrap(),
+            DMS {
+                degrees: 34,
+                minutes: 29,
+                seconds: 37.0,
+                bearing: Bearing::SouthEast,
+            });
+        assert_eq!(
+            DMS::from_azimuth((237,18,02.0)).unwrap(),
+            DMS {
+                degrees: 57,
+                minutes: 18,
+                seconds: 2.0,
+                bearing: Bearing::SouthWest,
+            });
+        assert_eq!(
+            DMS::from_azimuth((325,47,28.0)).unwrap(),
+            DMS {
+                degrees: 35,
+                minutes: 47,
+                seconds: 28.0,
+                bearing: Bearing::NorthWest,
+            });
     }
     #[test]
     fn test_to_azimuth() {
-        let dms = DMS::new(15,36,45.0,Bearing::East);
+        let dms = DMS::new(15,36,45.0,Bearing::East).unwrap();
         assert_eq!(dms.to_azimuth(), (15,36,45.0));
     }
     #[test]
     fn test_add_ops() {
-        let p1 = DMS::from_azimuth((71,18,50.0));
-        let p2 = DMS::from_azimuth((83,02,40.0));
+        let p1 = DMS::from_azimuth((71,18,50.0)).unwrap();
+        let p2 = DMS::from_azimuth((83,02,40.0)).unwrap();
         let p = p1 + p2;
-        let px = DMS::from_azimuth((154,21,30.0));
+        let px = DMS::from_azimuth((154,21,30.0)).unwrap();
         assert_eq!(p, px);
         let p = p1 + 1;
         assert_eq!(p, DMS {
@@ -765,10 +821,10 @@ mod tests {
     }
     #[test]
     fn test_sub_ops() {
-        let p1 = DMS::from_azimuth((68,45,53.0));
-        let p2 = DMS::from_azimuth((12,40,29.0));
+        let p1 = DMS::from_azimuth((68,45,53.0)).unwrap();
+        let p2 = DMS::from_azimuth((12,40,29.0)).unwrap();
         let p = p1 - p2;
-        let px = DMS::from_azimuth((56,05,24.0));
+        let px = DMS::from_azimuth((56,05,24.0)).unwrap();
         assert_eq!(p, px);
     }
     /*#[test]

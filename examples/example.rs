@@ -4,7 +4,7 @@ fn main() {
     ///////////////////////////
     // DMS
     ///////////////////////////
-    let ny = DMS::new(40, 43, 50.196, Bearing::North); // New York (lat)
+    let ny = DMS::new(40, 43, 50.196, Bearing::North).unwrap(); // New York (lat)
     let (deg, min, sec) = (ny.degrees, ny.minutes, ny.seconds);
     let _bearing = &ny.bearing;
     let ddeg = ny.to_decimal_degrees();
