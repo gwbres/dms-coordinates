@@ -123,7 +123,22 @@ impl std::ops::Add<DMS> for DMS {
         let minutes = (m0 as u64 + m1 as u64) + num_integer::div_floor(seconds, 60);
         let degrees = (d0 as u64 + d1 as u64) + num_integer::div_floor(minutes, 60);
         println!("{}° {}' {}''", degrees, minutes, seconds);
-        Self::from_azimuth(((degrees as u16)%360, (minutes as u16)%60, (seconds %60)as f64))
+        Self::from_azimuth(((degrees as u16)%360, (minutes as u16)%60, (seconds % 60) as f64))
+            .unwrap()
+    }
+}
+
+impl std::ops::Sub<DMS> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: Self) -> Self {
+        let (d0, m0, s0) = self.to_azimuth();
+        let (d1, m1, s1) = rhs.to_azimuth();
+        println!("\n({} {} {}) - ({} {} {})", d0, m0, s0, d1, m1, s1);
+        let degrees = d0 as i64 - d1 as i64; 
+        let minutes = (m0 as i64 - m1 as i64) - num_integer::div_floor(degrees, 360); 
+        let seconds = (s0 as i64 - s1 as i64) - num_integer::div_floor(minutes, 60);
+        println!("{}° {}' {}''", degrees, minutes, 0.0);
+        DMS::from_azimuth(((degrees % 360) as u16, (minutes % 60) as u16, (seconds % 60) as f64)) 
             .unwrap()
     }
 }
@@ -140,6 +155,11 @@ impl std::ops::Add<u64> for DMS {
         Self::from_azimuth(((degrees % 360) as u16, (minutes % 60) as u16, (seconds % 60) as f64))
             .unwrap()
     }
+}
+
+impl std::ops::Sub<u64> for DMS {
+    type Output = DMS;
+    fn sub (self, rhs: u64) -> Self { self.clone() }
 }
 
 impl std::ops::Add<i8> for DMS {
@@ -167,27 +187,6 @@ impl std::ops::Add<f64> for DMS {
     fn add (self, rhs: f64) -> Self { self + rhs as u64 }
 }
 
-impl std::ops::Sub<DMS> for DMS {
-    type Output = DMS;
-    fn sub (self, rhs: Self) -> Self {
-        let (d0,m0,s0) = self.to_azimuth();
-        let (d1,m1,s1) = rhs.to_azimuth();
-        let mut degrees = d0 as i16 - d1 as i16; 
-        let mut minutes = m0 as i16 - m1 as i16; 
-        let mut seconds = s0 - s1;
-        if degrees < 0 {
-            degrees = 360 - degrees;
-            minutes -= 1;
-        }
-        if minutes < 0 {
-            minutes = 60 - minutes;
-            seconds -= 1.0;
-        }
-        DMS::from_azimuth((degrees as u16, minutes as u16, seconds))
-            .unwrap()
-    }
-}
-
 impl std::ops::Sub<i8> for DMS {
     type Output = DMS;
     fn sub (self, rhs: i8) -> Self { self - rhs as u64 }
@@ -201,11 +200,6 @@ impl std::ops::Sub<i16> for DMS {
 impl std::ops::Sub<i32> for DMS {
     type Output = DMS;
     fn sub (self, rhs: i32) -> Self { self - rhs as u64 }
-}
-
-impl std::ops::Sub<u64> for DMS {
-    type Output = DMS;
-    fn sub (self, rhs: u64) -> Self { self.clone() }
 }
 
 impl std::ops::Sub<f32> for DMS {
@@ -245,15 +239,6 @@ impl std::ops::Mul<i64> for DMS {
     fn mul (self, rhs: i64) -> Self {
         let (d, m, s) = self.to_azimuth();
         println!("({} {} {})", d, m, s);
-        //let mut degrees = d as i64 * rhs; 
-        //let mut minutes = m as i64 * rhs; 
-        //let mut seconds = s * rhs as f64;
-        //let (extra_mins, secs) = num_integer::div_mod_floor(seconds as u64, 60); 
-       // println!("secs: {} extra_mins : {} ", seconds, seconds); //, extra_mins); 
-        //let (extra_deg, mins) = num_integer::div_mod_floor(minutes, 60); 
-        //println!("mins: {} extra_deg : {} ", mins, extra_deg); 
-        //let (overflow, degrees) = num_integer::div_mod_floor(degrees, 90);
-        //println!("degrees: {} overflow : {} ", mins, overflow); 
         DMS::from_azimuth((10,10,10.0))
             .unwrap()
     }
@@ -262,20 +247,13 @@ impl std::ops::Mul<i64> for DMS {
 impl std::ops::Div for DMS {
     type Output = DMS;
     fn div (self, rhs: Self) -> Self {
-        let (d0,m0,s0) = self.to_azimuth();
-        let (d1,m1,s1) = rhs.to_azimuth();
-        let mut degrees = d0 / d1; 
-        let mut minutes = m0 / m1; 
-        let mut seconds = s0 / s1;
-        if degrees < 0 {
-            degrees += 360;
-            minutes -= 1;
-        }
-        if minutes < 0 {
-            minutes += 60;
-            seconds -= 1.0;
-        }
-        DMS::from_azimuth((degrees, minutes, seconds))
+        let (d0, m0, s0) = self.to_azimuth();
+        let (d1, m1, s1) = rhs.to_azimuth();
+        let degrees = match d1 > d0 {
+            true => 0,
+            false => d0 / d1,
+        };
+        DMS::from_azimuth((degrees, 0, 0.0))
             .unwrap()
     }
 }
@@ -921,8 +899,14 @@ mod tests {
         let p1 = DMS::from_azimuth((68,45,53.0)).unwrap();
         let p2 = DMS::from_azimuth((12,40,29.0)).unwrap();
         let p = p1 - p2;
-        let px = DMS::from_azimuth((56,05,24.0)).unwrap();
-        assert_eq!(p, px);
+        assert_eq!(p,
+            DMS::from_azimuth((56,05,24.0)).unwrap());
+        
+        let p1 = DMS::from_azimuth((68,45,53.0)).unwrap();
+        let p2 = DMS::from_azimuth((12,40,29.0)).unwrap();
+        let p = p1 - p2;
+        assert_eq!(p,
+            DMS::from_azimuth((56,05,24.0)).unwrap());
     }
     /*#[test]
     fn test_mul_ops() {
