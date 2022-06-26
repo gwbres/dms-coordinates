@@ -1,10 +1,6 @@
 //! Package to manipulate 1D and 3D D°M'S'' coordinates,
 //! mainly in navigation applications.   
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
-use thiserror::Error;
-use std::io::{ErrorKind};
-use initial_conditions::EARTH_RADIUS;
-
 mod dms;
 mod dms3d;
 mod bearing;
@@ -14,6 +10,8 @@ pub use crate::{
     dms3d::*,
     bearing::*
 };
+
+use initial_conditions::EARTH_RADIUS;
 
 /// Returns distance (m) between two decimal degrees coordinates
 /// coord1: (lat,lon), coord2: (lat, lon)
