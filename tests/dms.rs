@@ -3,14 +3,19 @@ use dms_coordinates::{Bearing, DMS};
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
     fn test_constructor() {
         assert_eq!(
             DMS::new(40, 43, 50.196_f64, Bearing::North).is_ok(),
             true);
         assert_eq!(
-            DMS::new(40, 43, 50.196_f64, Bearing::NorthEast).is_err(),
+            DMS::new(45, 43, 50.196_f64, Bearing::NorthEast).is_err(),
+            false);
+        assert_eq!(
+            DMS::new(46, 43, 50.196_f64, Bearing::NorthEast).is_err(),
             true);
     }
+    #[test]
     fn test_to_ddeg_angle() {
         let dms = DMS::new(40, 43, 50.196_f64, Bearing::North)
             .unwrap(); // NY (lat)
