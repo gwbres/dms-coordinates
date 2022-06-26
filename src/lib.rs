@@ -13,6 +13,10 @@ pub use crate::{
 
 use initial_conditions::EARTH_RADIUS;
 
+#[cfg(test)]
+#[macro_use]
+extern crate assert_float_eq;
+
 /// Returns distance (m) between two decimal degrees coordinates
 /// coord1: (lat,lon), coord2: (lat, lon)
 pub fn projected_distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
