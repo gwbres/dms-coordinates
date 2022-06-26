@@ -9,27 +9,54 @@
 
 Rust Crate for D°M'S'' coordinates manipulation, used in navigation  :sailboat: :airplane: :ship:
 
-### `D°M'S''` 
+### `D°M'S''` (1D coordinates)
 
-`D°M'S''` represents coordinates with an associated bearing
+`D°M'S''` represents 1D coordinates with an associated bearing
 
 ```rust
-let ny = DMS::new(40, 43, 50.196, Bearing::North); // New York (lat)
-let (deg, min, sec) = (ny.degrees, ny.minutes, ny.seconds);
-let _bearing = &ny.bearing;
-let ddeg = ny.to_decimal_degrees(); // WGS84
-println!("New York (lat) {}", ny);
-println!("New York - {}° {}' {}''", deg, min, sec);
+// NY latitude coordinates 
+let ny = DMS::new(40, 43, 50.196, Bearing::North)
+    .unwrap();
+assert_eq!(ny.degrees, 40);
+assert_eq!(ny.minutes, 43);
+assert_eq!(ny.bearing, Bearing::North);
 ```
 
-Build `D°M'S''` coordinates from decimal degrees coordinates (`WGS84`):
+Angle must be properly defined, depending on the desired `Bearing`
+* when using plain bearings like N, S, E, W: D <= 90°
+* when using sub quadrant bearings like NE, NW, SE, SW: D <= 45° is expected
 
 ```rust
-let dms = DMS::from_decimal_degrees(-73.935242_f64, false)
+// 89° is ok for North bearing
+assert_eq!(DMS::new(89, 0, 0.0, Bearing::North).is_ok(), true);
+// 91° is nok for North bearing
+assert_eq!(DMS::new(91, 0, 0.0, Bearing::North).is_err(), true);
+// 89° is nok for NorthEast bearing
+assert_eq!(DMS::new(89, 0, 0.0, Bearing::NorthEast).is_err(), true);
+// 46° is nok for NorthEast bearing
+assert_eq!(DMS::new(46, 0, 0.0, Bearing::NorthEast).is_err(), true);
+// 44° is ok for NorthEast bearing
+assert_eq!(DMS::new(44, 0, 0.0, Bearing::NorthEast).is_ok(), true);
+```
+
+Convert `D°M'S"` into Decimal degrees angle (WGS84),
+angle is 0 <= angle < 360:
+
+```rust
+let ddeg = ny.to_ddeg_angle();
+assert!((ddeg - 40.730).abs(), < 1e-3); // expected NY latitude
+```
+
+Convenient method to build `D°M'S"` coordinates from coordinates
+in Decimal Degrees (`WGS84`):
+
+```rust
+// Sydney longitude coordinates
+let sydney = DMS::from_ddeg_longitude(151.209)
     .unwrap();
-assert_eq!(dms.bearing, Bearing::West); // NY 
-assert_eq!(dms.degrees, 73); // NY 
-assert_eq!(dms.minutes, 56); // NY 
+assert_eq!(dms.degrees, 151); 
+assert_eq!(dms.minutes, 12);
+assert_eq!(dms.bearing, Bearing::East);
 ```
 
 Another way to convert to `WGS84` is to cast
