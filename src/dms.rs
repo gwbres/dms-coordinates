@@ -1,6 +1,4 @@
 //! 1D D°M'S" coordinates
-use thiserror::Error;
-use std::io::{ErrorKind};
 use crate::Bearing;
 use serde_derive::{Serialize, Deserialize};
 
@@ -12,13 +10,11 @@ fn seconds_wrapping_modulo (secs: f64) -> (u16, u16, f64) {
     } else if secs < 3600.0 {
         let minutes = (secs / 60.0).floor();
         let integer = (secs.floor() as u16)%60;
-        let fract = secs.fract();
         (0, minutes as u16, integer as f64 + secs.fract())
     } else {
         let degrees = (secs / 3600.0).floor();
         let minutes = ((secs - degrees*3600.0) / 60.0).floor(); 
         let integer = (secs.floor() as u16)%60;
-        let fract = secs.fract();
         (degrees as u16, minutes as u16, integer as f64 + secs.fract())
     }
 }
@@ -56,7 +52,7 @@ pub enum Scale {
     Tree,
     /// Human / single individual scale is 3.6E-3"
     Human,
-    /// Rougthly precise scale, used in commercial devices, is 360E-6"
+    /// Roughly precise scale, used in commercial devices, is 360E-6"
     RoughSurveying,
     /// Extremely precise scale, used in tectnoic plate mapping for instance, is 36E-6"
     PreciseSurveying,
@@ -287,23 +283,81 @@ impl std::ops::Div<i64> for DMS {
 impl DMS {
     /// Builds `D°M'S"` coordinates from given
     /// D°, M', S" and optionnal Bearing.
-    /// This method never fails, it adapts to unusually large values by wrapping and apply
-    /// correct modulo operations
-    pub fn new (degrees: u16, minutes: u16, seconds: f64, bearing: Option<Bearing>) -> DMS {
+    /// If Bearing is not provided, this method never fails,
+    /// it will wrapp provided D°M'S" values to correct angle modulo 360°.
+    /// Otherwise, correct angle degrees are expected when Bearing is provided.
+    pub fn new (degrees: u16, minutes: u16, seconds: f64, bearing: Option<Bearing>) -> std::io::Result<DMS> {
         if let Some(bearing) = bearing {
-            Self::default()
+            let max = if bearing.is_sub_quadrant() {
+                45
+            } else {
+                90
+            };
+            if degrees > max {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData, format!("Degrees should be < {}", max)))
+            } else {
+                Ok(DMS {
+                    degrees, 
+                    minutes,
+                    seconds,
+                    bearing: Some(bearing),
+                })
+            }
         } else {
             let (s_degs, s_mins, seconds) = seconds_wrapping_modulo(seconds); 
             let (m_degs, minutes) = minutes_wrapping_modulo(minutes + s_mins);
-            DMS {
+            Ok(DMS {
                 degrees: (degrees + s_degs + m_degs)%360, 
                 minutes, 
                 seconds, 
                 bearing: None,
-            }
+            })
         }
     }
-}
+
+    /// Returns a rescaled copy of Self, with a corresponding Bearing
+    pub fn with_bearing (&self) -> Self {
+        let mut ret = self.clone();
+        let deg = self.degrees;
+        if deg <= 45 {
+            ret.bearing = Some(Bearing::North)
+        } else if deg <= 90 {
+            ret.bearing = Some(Bearing::NorthEast)
+        } else if deg <= 135 {
+            ret.bearing = Some(Bearing::East)
+        } else if deg <= 180 {
+            ret.bearing = Some(Bearing::SouthEast)
+        } else if deg <= 225 {
+            ret.bearing = Some(Bearing::South)
+        } else if deg <= 270 {
+            ret.bearing = Some(Bearing::SouthWest)
+        } else if deg <= 315 {
+            ret.bearing = Some(Bearing::West)
+        } else {
+            ret.bearing = Some(Bearing::NorthWest)
+        }
+        ret
+    }
+
+    /// Returns a rescaled copy of Self with no Bearing
+    pub fn without_bearing (&self) -> Self {
+        let mut ret = self.clone();
+        if let Some(bearing) = self.bearing {
+            match bearing {
+                Bearing::North => {},
+                Bearing::NorthEast => ret.degrees += 45,   
+                Bearing::East => ret.degrees += 90,
+                Bearing::SouthEast => ret.degrees += 135, 
+                Bearing::South => ret.degrees += 180,
+                Bearing::SouthWest => ret.degrees += 225,   
+                Bearing::West => ret.degrees += 270,
+                Bearing::NorthWest => ret.degrees += 315,
+            }
+        }
+        ret.bearing = None;
+        ret
+    }
 /*
     /// Buils `D°M'S"` coordinates from a latitude angle ɑ, 
     /// in decimal degrees. Quadrants are prefered, Subquadrants like NE, NW, SE, SW
@@ -355,10 +409,13 @@ impl DMS {
             ddeg
         }
     }
-} */
+    */
+}
 
+#[cfg(test)]
 mod tests {
-    use super::*;
+    use super::minutes_wrapping_modulo;
+    use super::seconds_wrapping_modulo;
     #[test]
     fn test_seconds_modulo() {
         assert_eq!(seconds_wrapping_modulo(59.0), (0, 0, 59.0));
@@ -424,7 +481,7 @@ mod tests {
         assert_float_relative_eq!(s, 59.99, 1e-6);
     }
     #[test]
-    fn test_minute__modulo() {
+    fn test_minute_modulo() {
         assert_eq!(minutes_wrapping_modulo(59), (0, 59));
         assert_eq!(minutes_wrapping_modulo(60), (1, 0));
         assert_eq!(minutes_wrapping_modulo(61), (1, 1));

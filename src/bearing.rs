@@ -6,12 +6,12 @@ use serde_derive::{Serialize, Deserialize};
 pub enum Bearing {
     North,
     NorthEast,
+    East,
     SouthEast,
     South,
     SouthWest,
     West,
     NorthWest,
-    East,
 }
 
 impl std::fmt::Display for Bearing {
@@ -74,9 +74,40 @@ impl Bearing {
     }
     /// Returns True if Self matches a subquadrabt bearing, like NE or SW
     pub fn is_sub_quadrant (&self) -> bool {
+        (self.to_angle() / 45)%2 > 0
+    }
+    /// Returns quadrant angle associated to self
+    pub fn to_angle (&self) -> u16 {
         match self {
-            Bearing::NorthEast | Bearing::SouthEast | Bearing::NorthWest | Bearing::SouthWest => true,
-            _ => false,
+            Bearing::North => 0,
+            Bearing::NorthEast => 45,
+            Bearing::East => 90,
+            Bearing::SouthEast => 135,
+            Bearing::South => 180,
+            Bearing::SouthWest => 225,
+            Bearing::West => 270,
+            Bearing::NorthWest => 315,
+        }
+    }
+    /// Builds a Bearing from given quadrant angle in degrees
+    pub fn from_angle (angle: u16) -> Bearing {
+        println!("angle {}", angle);
+        if angle <= 45 {
+            Bearing::North
+        } else if angle <= 90 {
+            Bearing::NorthEast
+        } else if angle <= 135 {
+            Bearing::East
+        } else if angle <= 180 {
+            Bearing::SouthEast
+        } else if angle <= 225 {
+            Bearing::South
+        } else if angle <= 270 {
+            Bearing::SouthWest
+        } else if angle <= 315 {
+            Bearing::West
+        } else { 
+            Bearing::NorthWest
         }
     }
 }

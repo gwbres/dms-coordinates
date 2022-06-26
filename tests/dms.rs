@@ -8,7 +8,7 @@ mod dms_tests {
     #[test]
     fn constructor() {
         assert_eq!(
-            DMS::new(40, 43, 50.196_f64, None),
+            DMS::new(40, 43, 50.196_f64, None).unwrap(),
             DMS {
                 degrees: 40,
                 minutes: 43,
@@ -17,7 +17,7 @@ mod dms_tests {
             }
         );
         assert_eq!(
-            DMS::new(180, 43, 50.196_f64, None),
+            DMS::new(180, 43, 50.196_f64, None).unwrap(),
             DMS {
                 degrees: 180,
                 minutes: 43,
@@ -26,7 +26,7 @@ mod dms_tests {
             }
         );
         assert_eq!(
-            DMS::new(359, 43, 50.196_f64, None),
+            DMS::new(359, 43, 50.196_f64, None).unwrap(),
             DMS {
                 degrees: 359,
                 minutes: 43,
@@ -35,7 +35,7 @@ mod dms_tests {
             }
         );
         assert_eq!(
-            DMS::new(10, 59, 50.196_f64, None),
+            DMS::new(10, 59, 50.196_f64, None).unwrap(),
             DMS {
                 degrees: 10,
                 minutes: 59,
@@ -44,7 +44,7 @@ mod dms_tests {
             }
         );
         assert_eq!(
-            DMS::new(10, 59, 59.99_f64, None),
+            DMS::new(10, 59, 59.99_f64, None).unwrap(),
             DMS {
                 degrees: 10,
                 minutes: 59,
@@ -56,7 +56,7 @@ mod dms_tests {
     #[test]
     fn wrapping_constructor() {
         assert_eq!(
-            DMS::new(10, 10, 60.0_f64, None),
+            DMS::new(10, 10, 60.0_f64, None).unwrap(),
             DMS {
                 degrees: 10,
                 minutes: 11,
@@ -64,70 +64,92 @@ mod dms_tests {
                 bearing: None,
             }
         );
-        let dms = DMS::new(10, 10, 60.1_f64, None);
+        let dms = DMS::new(10, 10, 60.1_f64, None).unwrap();
         assert_eq!(dms.degrees, 10);
         assert_eq!(dms.minutes, 11);
         assert_float_relative_eq!(dms.seconds, 0.1, 1e-6);
-        let dms = DMS::new(10, 10, 60.2_f64, None);
+        let dms = DMS::new(10, 10, 60.2_f64, None).unwrap();
         assert_eq!(dms.degrees, 10);
         assert_eq!(dms.minutes, 11);
         assert_float_relative_eq!(dms.seconds, 0.2, 1e-6);
-        let dms = DMS::new(10, 10, 61.2_f64, None);
+        let dms = DMS::new(10, 10, 61.2_f64, None).unwrap();
         assert_eq!(dms.degrees, 10);
         assert_eq!(dms.minutes, 11);
         assert_float_relative_eq!(dms.seconds, 1.2, 1e-6);
-        let dms = DMS::new(10, 10, 121.2_f64, None);
+        let dms = DMS::new(10, 10, 121.2_f64, None).unwrap();
         assert_eq!(dms.degrees, 10);
         assert_eq!(dms.minutes, 12);
         assert_float_relative_eq!(dms.seconds, 1.2, 1e-6);
-        let dms = DMS::new(10, 59, 0.0_f64, None);
+        let dms = DMS::new(10, 59, 0.0_f64, None).unwrap();
         assert_eq!(dms.degrees, 10);
         assert_eq!(dms.minutes, 59);
         assert_float_relative_eq!(dms.seconds, 0.0, 1e-6);
-        let dms = DMS::new(10, 60, 0.0_f64, None);
+        let dms = DMS::new(10, 60, 0.0_f64, None).unwrap();
         assert_eq!(dms.degrees, 11);
         assert_eq!(dms.minutes, 0);
         assert_float_relative_eq!(dms.seconds, 0.0, 1e-6);
-        let dms = DMS::new(10, 120, 0.0_f64, None);
+        let dms = DMS::new(10, 120, 0.0_f64, None).unwrap();
         assert_eq!(dms.degrees, 12);
         assert_eq!(dms.minutes, 0);
         assert_float_relative_eq!(dms.seconds, 0.0, 1e-6);
-        let dms = DMS::new(10, 400, 0.0_f64, None);
+        let dms = DMS::new(10, 400, 0.0_f64, None).unwrap();
         assert_eq!(dms.degrees, 16);
         assert_eq!(dms.minutes, 40);
         assert_float_relative_eq!(dms.seconds, 0.0, 1e-6);
-        let dms = DMS::new(10, 59, 59.99_f64, None);
+        let dms = DMS::new(10, 59, 59.99_f64, None).unwrap();
         assert_eq!(dms.degrees, 10);
         assert_eq!(dms.minutes, 59);
         assert_float_relative_eq!(dms.seconds, 59.99, 1e-6);
-        let dms = DMS::new(10, 59, 60.99_f64, None);
+        let dms = DMS::new(10, 59, 60.99_f64, None).unwrap();
         assert_eq!(dms.degrees, 11);
         assert_eq!(dms.minutes, 0);
         assert_float_relative_eq!(dms.seconds, 0.99, 1e-6);
-        let dms = DMS::new(10, 59, 61.99_f64, None);
+        let dms = DMS::new(10, 59, 61.99_f64, None).unwrap();
         assert_eq!(dms.degrees, 11);
         assert_eq!(dms.minutes, 0);
         assert_float_relative_eq!(dms.seconds, 1.99, 1e-6);
-        let dms = DMS::new(10, 59, 3600.0_f64, None);
+        let dms = DMS::new(10, 59, 3600.0_f64, None).unwrap();
         assert_eq!(dms.degrees, 11);
         assert_eq!(dms.minutes, 59);
         assert_float_relative_eq!(dms.seconds, 0.0, 1e-6);
-        let dms = DMS::new(10, 59, 3659.99_f64, None);
+        let dms = DMS::new(10, 59, 3659.99_f64, None).unwrap();
         assert_eq!(dms.degrees, 11);
         assert_eq!(dms.minutes, 59);
         assert_float_relative_eq!(dms.seconds, 59.99, 1e-6);
-        let dms = DMS::new(10, 59, 3660.00_f64, None);
+        let dms = DMS::new(10, 59, 3660.00_f64, None).unwrap();
         assert_eq!(dms.degrees, 12);
         assert_eq!(dms.minutes, 0);
         assert_float_relative_eq!(dms.seconds, 0.0, 1e-6);
-        let dms = DMS::new(10, 59, 3660.01_f64, None);
+        let dms = DMS::new(10, 59, 3660.01_f64, None).unwrap();
         assert_eq!(dms.degrees, 12);
         assert_eq!(dms.minutes, 0);
         assert_float_relative_eq!(dms.seconds, 0.01, 1e-6);
-        let dms = DMS::new(10, 59, 3660.99_f64, None);
+        let dms = DMS::new(10, 59, 3660.99_f64, None).unwrap();
         assert_eq!(dms.degrees, 12);
         assert_eq!(dms.minutes, 0);
         assert_float_relative_eq!(dms.seconds, 0.99, 1e-6);
+    }
+    #[test]
+    fn constructor_with_bearing() {
+        assert_eq!(DMS::new(44, 0, 40.0, Some(Bearing::NorthEast)).is_ok(), true);
+        assert_eq!(DMS::new(45, 0, 40.0, Some(Bearing::NorthEast)).is_ok(), true);
+        assert_eq!(DMS::new(46, 0, 40.0, Some(Bearing::NorthEast)).is_err(), true);
+        assert_eq!(DMS::new(10,10,50.0,Some(Bearing::North)).unwrap(),
+            DMS {
+                degrees: 10,
+                minutes: 10,
+                seconds: 50.0,
+                bearing: Some(Bearing::North),
+            }
+        );
+        assert_eq!(DMS::new(10,10,50.0,Some(Bearing::NorthEast)).unwrap(),
+            DMS {
+                degrees: 10,
+                minutes: 10,
+                seconds: 50.0,
+                bearing: Some(Bearing::NorthEast),
+            }
+        );
     }
     /*
     #[test]
