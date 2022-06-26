@@ -4,7 +4,7 @@ use dms_coordinates::Bearing;
 mod tests {
     use super::*;
     #[test]
-    fn test_is_northern() {
+    fn is_northern() {
         assert_eq!(Bearing::North.is_northern(), true);
         assert_eq!(Bearing::NorthEast.is_northern(), true);
         assert_eq!(Bearing::NorthWest.is_northern(), true);
@@ -15,7 +15,7 @@ mod tests {
         assert_eq!(Bearing::West.is_northern(), false);
     }
     #[test]
-    fn test_is_southern() {
+    fn is_southern() {
         assert_eq!(Bearing::North.is_southern(), false);
         assert_eq!(Bearing::NorthEast.is_southern(), false);
         assert_eq!(Bearing::NorthWest.is_southern(), false);
@@ -26,7 +26,7 @@ mod tests {
         assert_eq!(Bearing::West.is_southern(), false);
     }
     #[test]
-    fn test_is_eastern() {
+    fn is_eastern() {
         assert_eq!(Bearing::North.is_eastern(), false);
         assert_eq!(Bearing::NorthEast.is_eastern(), true);
         assert_eq!(Bearing::NorthWest.is_eastern(), false);
@@ -37,7 +37,7 @@ mod tests {
         assert_eq!(Bearing::West.is_eastern(), false);
     }
     #[test]
-    fn test_is_western() {
+    fn is_western() {
         assert_eq!(Bearing::North.is_western(), false);
         assert_eq!(Bearing::NorthEast.is_western(), false);
         assert_eq!(Bearing::NorthWest.is_western(), true);
@@ -48,7 +48,7 @@ mod tests {
         assert_eq!(Bearing::West.is_western(), true);
     }
     #[test]
-    fn test_is_sub_quadrant() {
+    fn is_sub_quadrant() {
         assert_eq!(Bearing::NorthEast.is_sub_quadrant(), true);
         assert_eq!(Bearing::NorthWest.is_sub_quadrant(), true);
         assert_eq!(Bearing::SouthEast.is_sub_quadrant(), true);
