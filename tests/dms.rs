@@ -52,29 +52,22 @@ mod dms_tests {
         let seconds : u32 = dms.into();
         assert_eq!(seconds, 59);
     }
-    /*
     #[test]
     fn test_add_dms() {
-        let d0 = DMS::new(71, 18, 50.0)
-            .unwrap();
-        let d1 = DMS::new(83, 2, 40.3)
-            .unwrap(); 
+        let d0 = DMS::new(71, 18, 50.0);
+        let d1 = DMS::new(83, 2, 40.3);
         let d = d0 + d1;
         assert_eq!(d.degrees, 154);
         assert_eq!(d.minutes, 21);
         assert_float_relative_eq!(d.seconds, 30.3, 1E-6);
-        let d0 = DMS::new(101, 23, 16.3)
-            .unwrap();
-        let d1 = DMS::new(2, 59, 31.3)
-            .unwrap(); 
+        let d0 = DMS::new(101, 23, 16.3);
+        let d1 = DMS::new(2, 59, 31.3);
         let d = d0 + d1;
         assert_eq!(d.degrees, 104);
         assert_eq!(d.minutes, 22);
         assert_float_relative_eq!(d.seconds, 47.6, 1E-6);
-        let d0 = DMS::new(68, 45, 53.8)
-            .unwrap();
-        let d1 = DMS::new(12, 10, 31.3)
-            .unwrap();
+        let d0 = DMS::new(68, 45, 53.8);
+        let d1 = DMS::new(12, 10, 31.3);
         let d = d0 + d1;
         assert_eq!(d.degrees, 80);
         assert_eq!(d.minutes, 56);
@@ -82,22 +75,22 @@ mod dms_tests {
     }
     #[test]
     fn test_add_float() {
-        let d0 = DMS::new(101, 23, 16.3).unwrap();
+        let d0 = DMS::new(101, 23, 16.3);
         let d = d0 + 1.0_f64;
         assert_eq!(d.degrees, 101);
         assert_eq!(d.minutes, 23);
         assert_float_relative_eq!(d.seconds, 17.3, 1E-6);
         
-        let d0 = DMS::new(101, 23, 16.3).unwrap();
+        let d0 = DMS::new(101, 23, 16.3);
         let d = d0 + 1.7_f64;
         assert_eq!(d.degrees, 101);
         assert_eq!(d.minutes, 23);
         assert_float_relative_eq!(d.seconds, 18.0, 1E-6);
         
-        let d0 = DMS::new(99, 58, 59.8).unwrap();
-        let d = d0 + 0.2_f32;
+        let d0 = DMS::new(99, 58, 59.8);
+        let d = d0 + 0.2_f64;
         assert_eq!(d.degrees, 99);
         assert_eq!(d.minutes, 59);
         assert_float_relative_eq!(d.seconds, 0.0, 1E-6);
-    }*/
+    }
 }

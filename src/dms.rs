@@ -1,5 +1,6 @@
 //! Angle representation in D°M'S" (sexagesimal)
-//! with arithmetics for calculations involved in navigation.
+//! Supports arithmetics operation, up to double precision,
+//! for easy navigation calculations.
 use serde_derive::{Serialize, Deserialize};
 
 /// `D°M'S"` represents one angle 
@@ -150,27 +151,75 @@ impl std::ops::Sub<f32> for DMS {
     }
 }
 
-/*
 impl std::ops::Mul for DMS {
     type Output = DMS;
+    /// Multiplies Self by `rhs`
     fn mul (self, rhs: Self) -> Self {
-        self.clone()
+        DMS::from_seconds(
+            self.total_seconds() * rhs.total_seconds()
+        )
     }
 }
 
 impl std::ops::Mul<f64> for DMS {
     type Output = DMS;
-    fn mul (self, rhs: i64) -> Self {
-        let mut degrees = self.degrees as f64 * rhs; 
-        let mut minutes = self.minutes as f64 * rhs; 
-        let mut seconds = self.seconds as f64 * rhs;
-        DMS {
-            degrees: (degrees.floor() as i16)%360,
-            minutes,
-            seconds,
-        }
+    /// Mutliplies Self by `rhs` fractionnal factor
+    fn mul (self, rhs: f64) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs
+        )
     }
-} */
+}
+
+impl std::ops::Mul<f32> for DMS {
+    type Output = DMS;
+    /// Multiplies Self by `rhs` fractionnal factor
+    fn mul (self, rhs: f32) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
+
+impl std::ops::Mul<u64> for DMS {
+    type Output = DMS;
+    /// Multiplies Self by `rhs` integral factor
+    fn mul (self, rhs: u64) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
+
+impl std::ops::Mul<u32> for DMS {
+    type Output = DMS;
+    /// Multiplies Self by `rhs` integral factor
+    fn mul (self, rhs: u32) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
+
+impl std::ops::Mul<u16> for DMS {
+    type Output = DMS;
+    /// Multiplies Self by `rhs` integral factor
+    fn mul (self, rhs: u16) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
+
+impl std::ops::Mul<u8> for DMS {
+    type Output = DMS;
+    /// Multiplies Self by `rhs` integral factor
+    fn mul (self, rhs: u8) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
 
 impl DMS {
     /// Builds `D°M'S"` angle, from given D°, M', S" values.
