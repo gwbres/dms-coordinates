@@ -59,7 +59,7 @@ defined in this format:
 #TODO
 let lat = DMS1D::from_ddeg_latitude(3.45534);
 let lon = DMS1D::from_ddeg_longitude(90.0);
-``̀ 
+```
 
 ## `from_str()` special method
 
