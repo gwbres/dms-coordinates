@@ -1,4 +1,4 @@
-//! Angle representation in D°M'S" (sexagesimal)
+//! Angle representation in D°M'S" (sexagesimal format).
 //! Supports arithmetics operation, up to double precision,
 //! for easy navigation calculations.
 use serde_derive::{Serialize, Deserialize};
@@ -315,6 +315,14 @@ impl DMS {
             minutes: minutes as u8,
             seconds: integer as f64 + seconds.fract(),
         }
+    }
+
+    /// Parses `D°M'S"` from str descriptor
+    /// using standard fmt
+    pub fn from_str (s: &str, fmt: &str) -> ParseResult<Self> {
+        let mut parsed = Parsed::new();
+        parse(&mut parsed, s, StrftimeItems::new(fmt))?;
+        parsed.to_self()
     }
     
     /// Returns total of seconds (base unit) contained in Self
