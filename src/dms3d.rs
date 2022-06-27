@@ -2,24 +2,104 @@
 use thiserror::Error;
 use initial_conditions::EARTH_RADIUS;
 use serde_derive::{Serialize, Deserialize};
-use crate::{DMS, Bearing, projected_distance};
+use crate::{DMS, Cardinal, projected_distance};
+
+/// 1D D°M'S" represents either a Latitude or Longitude coordinates, 
+/// with one angle in Degrees, Minutes, Seconds and one Cardinal
+pub struct DMS1d {
+    /// Angle in D°M'S" format with fractionnal seconds, double precision.
+    /// Angle must be |D°| < x for a Latitude,
+    /// Angle must be |D°| < x for a Longitude,
+    pub dms: DMS,
+    /// "N"/"S" Cardinal for a Latitude,
+    /// "E" / "W" Cardinal for a Longitude,
+    pub cardinal: Cardinal,
+}
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("expects one of \"N\", \"S\", \"E\", \"W\" cardinals")]
+    CardinalError,
+    #[error("degrees are out of expected |D°| < {0} range")]
+    DegreesRangeError(u8),
+}
+
+impl DMS1d {
+    /// Builds either Latitude or Longitude coordinates
+    /// from given values. Values should match predefined ranges
+    pub fn new (degrees: i8, minutes: u16, seconds: f64, cardinal: Cardinal) -> Result<DMS1d, Error> {
+        if cardinal.is_latitude() {
+            if angle.abs() < 90 {
+                Ok(Self {
+                    dms : DMS {
+                        degrees: degrees,
+                        minutes: minutes,
+                        seconds: seconds,
+                    },
+                    cardinal,
+                })
+            } else {
+                Err(Error::DegreesRangeError(90))
+            }
+        } else if cardinal.is_longitude() {
+            if angle.abs() < 180 {
+                Ok(Self {
+                    dms: DMS {
+                        degrees: degrees,
+                        minutes: minutes,
+                        seconds: seconds,
+                    }
+                    cardinal,
+                })
+            } else {
+                Err(Error::DegreesRangeError(180))
+            }
+        } else {
+            Err(Error::CardinalError)
+        }
+    }
+
+    /// Builds Latitude coordinates from given angle in Decimal Degrees.
+    /// Angle must lie within predefined range.
+    pub fn from_latitude_ddeg (angle: f64) -> Result<DMS1d, Error> {
+        if angle.floor().abs() as u8 < 90 {
+        } else {
+            Err(Error::DegreesRangeError(90))
+        }
+    }
+    
+    /// Builds Longitude coordinates from given angle in Decimal Degrees.
+    /// Angle must lie within predefined range.
+    pub fn from_longitude_ddeg (angle: f64) -> Result<DMS1d, Error> {
+        if angle.floor().abs() as u8 < 180 {
+        } else {
+            Err(Error::DegreesRangeError(180))
+        }
+    }
+}
 
 /// `3D D°M'S" coordinates
+/// is the combination of two coordinates,
+/// latitude and longitude respectively, 
+/// and an optionnal altitude / depth
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS3d {
-   pub latitude: DMS,
-   pub longitude: DMS,
-   pub altitude: Option<f64>,
+    /// Latitude as DMS1d object
+    pub latitude: DMS1d,
+    /// Longitude as DMS1d object
+    pub longitude: DMS1d,
+    /// Optionnal altitude / depth
+    pub altitude: Option<f64>,
 }
 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("failed to open file")]
     IoError(#[from] std::io::Error),
-    #[error("gpx parsing error")]
+    #[error("GPX parsing error")]
     GpxParsingError,
-    #[error("failed to wr file")]
+    #[error("failed to write GPX")]
     GpxWritingError(#[from] gpx::errors::GpxError),
 }
 
@@ -32,7 +112,6 @@ impl std::fmt::Display for DMS3d {
     }
 }
 
-/*
 impl Default for DMS3d {
     fn default() -> Self {
         Self {
@@ -258,11 +337,9 @@ impl std::ops::Div for DMS3d {
             altitude: altitude,
         }
     }
-} */
-
+*/
 impl From<rust_3d::Point3D> for DMS3d {
     fn from (item: rust_3d::Point3D) -> Self {
         Self::from_cartesian(item)
     }
 }
-*/

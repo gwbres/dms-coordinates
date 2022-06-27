@@ -3,6 +3,9 @@
 //! for easy navigation calculations.
 use serde_derive::{Serialize, Deserialize};
 
+/// Total number of seconds in 360 degrees
+const UNIT_CIRCLE_SECONDS : u32 = 360 * 3600;
+
 /// `D°M'S"` represents one angle 
 /// in Degrees D°, Minutes M' and fractionnal
 /// Seconds S" (double precision)
