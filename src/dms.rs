@@ -317,18 +317,22 @@ impl DMS {
         }
     }
 
-    /// Parses `D°M'S"` from str descriptor
-    /// using standard fmt
-    pub fn from_str (s: &str, fmt: &str) -> ParseResult<Self> {
-        let mut parsed = Parsed::new();
-        parse(&mut parsed, s, StrftimeItems::new(fmt))?;
-        parsed.to_self()
-    }
-    
     /// Returns total of seconds (base unit) contained in Self
     pub fn total_seconds (&self) -> f64 {
         self.degrees as f64 * 3600.0
         + self.minutes as f64 * 60.0
             + self.seconds
+    }
+
+    /// Converts self to radians,
+    /// we consider 1 hour = 15° from the rotation of the Earth
+    pub fn to_radians (&self) -> f64 {
+        self.total_seconds() * 5E-6_f64
+    }
+
+    /// Builds `D°M'S"` from angle in radians,
+    /// we consider 1 hour = 15° from the rotation of the Earth
+    pub fn from_radians (rad: f64) -> DMS {
+        DMS::from_seconds(rad /5E-6_f64)
     }
 }
