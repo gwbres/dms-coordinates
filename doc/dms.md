@@ -44,9 +44,9 @@ assert_eq!(dms.minutes,  1);
 ```
 
 It is possible to cast a D°M'S" angle into
-* a f64 number: you get the total amount of seconds, with fractionnal and double precision
-* a f32 number: you get the total amount of seconds, with fractionnal part and precision loss (6 digits)
-* u64, u32, u16, u8 : you get the total amount of seconds, but fractionnal part is lost
+* a `f64` number: you get the total amount of seconds, with fractionnal and double precision
+* a `f32` number: you get the total amount of seconds, with fractionnal part and precision loss (6 digits)
+* `u64`, `u32`, `u16`, `u8` : you get the total amount of seconds, but fractionnal part is lost
 
 ```rust
 let dms = DMS::new(0, 1, 30.33);
