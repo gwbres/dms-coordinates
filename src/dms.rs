@@ -327,12 +327,12 @@ impl DMS {
     /// Converts self to radians,
     /// we consider 1 hour = 15° from the rotation of the Earth
     pub fn to_radians (&self) -> f64 {
-        self.total_seconds() * 5E-6_f64
+        self.total_seconds() / 5E-6_f64
     }
 
     /// Builds `D°M'S"` from angle in radians,
     /// we consider 1 hour = 15° from the rotation of the Earth
     pub fn from_radians (rad: f64) -> DMS {
-        DMS::from_seconds(rad /5E-6_f64)
+        DMS::from_seconds(rad *5E-6_f64)
     }
 }
