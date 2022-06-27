@@ -73,4 +73,13 @@ mod tests {
         assert_eq!(Cardinal::NorthEast.to_angle(), 45);
         assert_eq!(Cardinal::NorthWest.to_angle(), 315);
     }
+    #[test]
+    fn test_add_ops() {
+        assert_eq!(Cardinal::North +90, Cardinal::East);
+        assert_eq!(Cardinal::North +180, Cardinal::South);
+        assert_eq!(Cardinal::East +180, Cardinal::West);
+        assert_eq!(Cardinal::East +90, Cardinal::South);
+        assert_eq!(Cardinal::NorthEast +315, Cardinal::North);
+        assert_eq!(Cardinal::NorthEast +225, Cardinal::West);
+    }
 }

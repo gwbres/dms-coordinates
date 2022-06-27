@@ -27,7 +27,7 @@ impl std::ops::Add<u16> for Cardinal {
     type Output = Cardinal;
     /// Adds given angle (°) to Self
     fn add (self, rhs: u16) -> Self {
-        Cardinal::from_angle(self.to_angle() + rhs)
+        Cardinal::from_angle((self.to_angle() + rhs) % 360)
     }
 }
 
