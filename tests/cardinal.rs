@@ -58,4 +58,19 @@ mod tests {
         assert_eq!(Cardinal::SouthEast.is_sub_quadrant(), true);
         assert_eq!(Cardinal::SouthWest.is_sub_quadrant(), true);
     }
+    #[test]
+    fn test_from_angle() {
+        assert_eq!(Cardinal::from_angle(0), Cardinal::North);
+        assert_eq!(Cardinal::from_angle(90), Cardinal::East);
+        assert_eq!(Cardinal::from_angle(135), Cardinal::SouthEast);
+        assert_eq!(Cardinal::from_angle(180), Cardinal::South);
+        assert_eq!(Cardinal::from_angle(315), Cardinal::NorthWest);
+    }
+    #[test]
+    fn test_to_angle() {
+        assert_eq!(Cardinal::North.to_angle(), 0);
+        assert_eq!(Cardinal::South.to_angle(), 180);
+        assert_eq!(Cardinal::NorthEast.to_angle(), 45);
+        assert_eq!(Cardinal::NorthWest.to_angle(), 315);
+    }
 }

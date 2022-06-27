@@ -3,18 +3,36 @@ use serde_derive::{Serialize, Deserialize};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 #[derive(Serialize, Deserialize)]
+#[repr(u16)]
 pub enum Cardinal {
-    North,
-    NorthEast,
-    East,
-    SouthEast,
-    South,
-    SouthWest,
-    West,
-    NorthWest,
+    /// Northern Cardinal
+    North = 0,
+    /// North Eastern Cardinal
+    NorthEast = 45,
+    /// Eastern Cardinal
+    East = 90,
+    /// South Eastern Cardinal
+    SouthEast = 135,
+    /// Southern Cardinal
+    South = 180,
+    /// South Western Cardinal
+    SouthWest = 225,
+    /// Western Cardinal
+    West = 270,
+    /// North Western Cardinal
+    NorthWest = 315,
+}
+
+impl std::ops::Add<u16> for Cardinal {
+    type Output = Cardinal;
+    /// Adds given angle (°) to Self
+    fn add (self, rhs: u16) -> Self {
+        Cardinal::from_angle(self.to_angle() + rhs)
+    }
 }
 
 impl Default for Cardinal {
+    /// Builds default Northern Cardinal
     fn default() -> Self {
         Self::North
     }
@@ -82,7 +100,8 @@ impl Cardinal {
     pub fn is_sub_quadrant (&self) -> bool {
         (self.to_angle() / 45)%2 > 0
     }
-    /// Returns quadrant angle associated to self
+    /// Returns compass angle (in D°) associated to Self,
+    /// 0° being North
     pub fn to_angle (&self) -> u16 {
         match self {
             Cardinal::North => 0,
@@ -95,7 +114,8 @@ impl Cardinal {
             Cardinal::NorthWest => 315,
         }
     }
-    /// Builds a Cardinal from given compass angle expressed in degrees
+    /// Builds a Cardinal from given compass angle (in D°),
+    /// 0° being North
     pub fn from_angle (angle: u16) -> Cardinal {
         if angle < 45 {
             Cardinal::North
