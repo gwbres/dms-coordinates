@@ -1,4 +1,4 @@
-//! Cardinal directions 
+//! Cardinal points, only integer angles (N, NE, E, ..) are supported
 use serde_derive::{Serialize, Deserialize};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
@@ -101,7 +101,7 @@ impl Cardinal {
         (self.to_angle() / 45)%2 > 0
     }
     /// Returns compass angle (in D°) associated to Self,
-    /// 0° being North
+    /// 0° being North Cardinal
     pub fn to_angle (&self) -> u16 {
         match self {
             Cardinal::North => 0,
@@ -115,7 +115,7 @@ impl Cardinal {
         }
     }
     /// Builds a Cardinal from given compass angle (in D°),
-    /// 0° being North
+    /// 0° being North Cardinal
     pub fn from_angle (angle: u16) -> Cardinal {
         if angle < 45 {
             Cardinal::North
