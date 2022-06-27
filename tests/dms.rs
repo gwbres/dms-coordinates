@@ -93,4 +93,29 @@ mod dms_tests {
         assert_eq!(d.minutes, 59);
         assert_float_relative_eq!(d.seconds, 0.0, 1E-6);
     }
+    #[test]
+    fn test_sub_dms() {
+        let d0 = DMS::new(71, 18, 50.0);
+        let d1 = DMS::new(20, 10, 40.0);
+        let d = d0 - d1;
+        assert_eq!(d.degrees, 51);
+        assert_eq!(d.minutes, 8);
+        assert_float_relative_eq!(d.seconds, 10.0, 1E-6);
+    }
+    #[test]
+    fn test_sub_float() {
+        let d0 = DMS::new(101, 23, 16.3);
+        let d = d0 - 1.0_f64;
+        assert_eq!(d.degrees, 101);
+        assert_eq!(d.minutes, 23);
+        assert_float_relative_eq!(d.seconds, 15.3, 1E-6);
+    }
+    #[test]
+    fn test_mul_float() {
+        let d0 = DMS::new(101, 23, 16.3);
+        let d = d0 * 1.0_f64;
+        assert_eq!(d.degrees, 101);
+        assert_eq!(d.minutes, 23);
+        assert_float_relative_eq!(d.seconds, 16.3, 1E-6);
+    }
 }

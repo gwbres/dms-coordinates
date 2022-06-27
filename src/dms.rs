@@ -166,7 +166,7 @@ impl std::ops::Mul for DMS {
 
 impl std::ops::Mul<f64> for DMS {
     type Output = DMS;
-    /// Mutliplies Self by `rhs` fractionnal factor
+    /// Multiplies Self by `rhs` fractionnal factor
     fn mul (self, rhs: f64) -> Self {
         DMS::from_seconds(
             self.total_seconds() * rhs
@@ -218,6 +218,76 @@ impl std::ops::Mul<u8> for DMS {
     type Output = DMS;
     /// Multiplies Self by `rhs` integral factor
     fn mul (self, rhs: u8) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
+
+impl std::ops::Div for DMS {
+    type Output = DMS;
+    /// Divides Self by `rhs`
+    fn div (self, rhs: Self) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() / rhs.total_seconds()
+        )
+    }
+}
+
+impl std::ops::Div<f64> for DMS {
+    type Output = DMS;
+    /// Divides Self by `rhs` fractionnal factor
+    fn div (self, rhs: f64) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() / rhs
+        )
+    }
+}
+
+impl std::ops::Div<f32> for DMS {
+    type Output = DMS;
+    /// Divides Self by `rhs` fractionnal factor
+    fn div (self, rhs: f32) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() / rhs as f64
+        )
+    }
+}
+
+impl std::ops::Div<u64> for DMS {
+    type Output = DMS;
+    /// Divides Self by `rhs` integral factor
+    fn div (self, rhs: u64) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() / rhs as f64
+        )
+    }
+}
+
+impl std::ops::Div<u32> for DMS {
+    type Output = DMS;
+    /// Divides Self by `rhs` integral factor
+    fn div (self, rhs: u32) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
+
+impl std::ops::Div<u16> for DMS {
+    type Output = DMS;
+    /// Divides Self by `rhs` integral factor
+    fn div (self, rhs: u16) -> Self {
+        DMS::from_seconds(
+            self.total_seconds() * rhs as f64
+        )
+    }
+}
+
+impl std::ops::Div<u8> for DMS {
+    type Output = DMS;
+    /// Divides Self by `rhs` integral factor
+    fn div (self, rhs: u8) -> Self {
         DMS::from_seconds(
             self.total_seconds() * rhs as f64
         )
