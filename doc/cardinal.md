@@ -18,3 +18,23 @@ assert_eq!(south, Cardinal::South);
 assert_eq!(south.is_southern(), true);
 assert_eq!(south.is_eastern(), false);
 ```
+
+Build Cardinal from Angle in D°, we consider 0° as North
+
+```rust
+let n = Cardinal::from_angle(0);
+assert_eq!(n.is_northern(), true);
+assert_eq!(n.is_southern(), false);
+
+let e = Cardinal::from_angle(90);
+assert_eq!(e.is_eastern(), true);
+```
+
+Value is rounded to lowest closest Cardinal
+```rust
+let c = Cardinal::from_angle(10);
+assert_eq!(c, Cardinal::North);
+
+let c = Cardinal::from_angle(190);
+assert_eq!(c, Cardinal::South);
+```
