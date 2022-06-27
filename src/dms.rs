@@ -1,40 +1,19 @@
-//! 1D D°M'S" coordinates
-use crate::Bearing;
+//! Angle representation in D°M'S" (sexagesimal)
+//! with arithmetics for calculations involved in navigation.
 use serde_derive::{Serialize, Deserialize};
 
-/// Wrapping modulo ops to use on `Seconds` in D°M'S" structure.
-/// Returns (extra degrees, extra minutes, wrapped) 
-fn seconds_wrapping_modulo (secs: f64) -> (u16, u16, f64) {
-    if secs < 60.0 {
-        (0, 0, secs)
-    } else if secs < 3600.0 {
-        let minutes = (secs / 60.0).floor();
-        let integer = (secs.floor() as u16)%60;
-        (0, minutes as u16, integer as f64 + secs.fract())
-    } else {
-        let degrees = (secs / 3600.0).floor();
-        let minutes = ((secs - degrees*3600.0) / 60.0).floor(); 
-        let integer = (secs.floor() as u16)%60;
-        (degrees as u16, minutes as u16, integer as f64 + secs.fract())
-    }
-}
-
-/// Wrapping modulo ops on integer value for `Minutes` field in D°M'S"
-fn minutes_wrapping_modulo (value: u16) -> (u16, u16) { (value/60, value %60) }
-
-/// `D°M'S"` coordinates,
-/// to represent an angle Degrees / Minutes / Seconds,
-/// where 1° is corresponds to the rotation of Earth in 1 hour.   
-/// 0 <= D° < 360 when no Bearing is used.
-/// 0 <= D° < 90 when Bearing is used.
-/// 0 <= D° < 45 when Sub quadrant (NE,SE,SW,NW quandrants) is used.
+/// `D°M'S"` represents one angle 
+/// in Degrees D°, Minutes M' and fractionnal
+/// Seconds S" (double precision)
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS {
+    /// Degrees 0 <= D° < 360 
     pub degrees: u16,
-    pub minutes: u16,
+    /// Minutes 0 <= M' < 60 
+    pub minutes: u8,
+    /// Seconds with fraction 0 <= S" < 60 
     pub seconds: f64,
-    pub bearing: Option<Bearing>,
 }
 
 pub enum Scale {
@@ -60,166 +39,118 @@ pub enum Scale {
 
 impl std::fmt::Display for DMS {
     fn fmt (&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if let Some(bearing) = self.bearing {
-            write!(f, "{}°{}'{}\"{}", 
-                self.degrees, 
-                self.minutes, 
-                self.seconds,
-                bearing)
-        } else {
-            write!(f, "{}°{}'{}\"", 
-                self.degrees, 
-                self.minutes, 
-                self.seconds)
-        }
+        write!(f, "{}°{}'{}\"", 
+            self.degrees, 
+            self.minutes, 
+            self.seconds,
+        )
     }
 }
 
 impl Default for DMS {
-    /// Builds a null coordinates, with no Bearing associated to it
+    /// Builds null coordinates
     fn default() -> DMS { 
         DMS {
             degrees: 0,
             minutes: 0,
             seconds: 0.0_f64,
-            bearing: None,
         }
-    }
-}
-
-/*
-impl Into<f32> for DMS {
-    fn into (self) -> f32 {
-        self.to_ddeg_angle() as f32
     }
 }
 
 impl Into<f64> for DMS {
-    fn into (self) -> f64 {
-        self.to_ddeg_angle()
+    /// Converts Self into fractionnal seconds 
+    fn into (self) -> f64 { 
+        self.total_seconds() 
     }
 }
-*/
 
-/*
+impl Into<f32> for DMS {
+    /// Converts Self into fractionnal seconds with precision loss 
+    fn into (self) -> f32 { 
+        self.total_seconds() as f32 
+    }
+}
+
+impl Into<u64> for DMS {
+    /// Converts Self into seconds base, loosing fractionnal part
+    fn into (self) -> u64 { 
+        self.total_seconds().floor() as u64 
+    }
+}
+
+impl Into<u32> for DMS {
+    /// Converts Self into seconds base, loosing fractionnal part
+    fn into (self) -> u32 { 
+        self.total_seconds().floor() as u32 
+    }
+}
+
+impl Into<u16> for DMS {
+    /// Converts Self into seconds base, loosing fractionnal part
+    fn into (self) -> u16 { 
+        self.total_seconds().floor() as u16 
+    }
+}
+
+impl Into<u8> for DMS {
+    /// Converts Self into seconds base, loosing fractionnal part
+    fn into (self) -> u8 { 
+        self.total_seconds().floor() as u8 
+    }
+}
+
 impl std::ops::Add<DMS> for DMS {
     type Output = DMS;
+    /// Adds `D°M'S"` coordinates together
     fn add (self, rhs: Self) -> Self {
-        let matches_lat = self.bearing.is_latitude() && rhs.bearing.is_latitude();
-        let matches_lon = self.bearing.is_longitude() && rhs.bearing.is_longitude();
-        if !(matches_lat || matches_lon) {
-            panic!("cannot add {} and {} together", self, rhs);
-        }
-        let (d0, rhs) = (self.to_ddeg_angle(), rhs.to_ddeg_angle());
-        if matches_lat {
-            Self::from_ddeg_latitude(d0 + rhs) 
-        } else {
-            Self::from_ddeg_longitude(d0 + rhs) 
-        }
+        DMS::from_seconds(
+            self.total_seconds() + rhs.total_seconds()
+        )
     }
-}
-*/
-
-/*
-impl std::ops::Sub<DMS> for DMS {
-    type Output = DMS;
-    fn sub (self, rhs: Self) -> Self {
-        let (d0, m0, s0) = self.to_azimuth();
-        let (d1, m1, s1) = rhs.to_azimuth();
-        println!("\n({} {} {}) - ({} {} {})", d0, m0, s0, d1, m1, s1);
-        let degrees = d0 as i64 - d1 as i64; 
-        let minutes = (m0 as i64 - m1 as i64) - num_integer::div_floor(degrees, 360); 
-        let seconds = (s0 as i64 - s1 as i64) - num_integer::div_floor(minutes, 60);
-        println!("{}° {}' {}\"", degrees, minutes, 0.0);
-        DMS::from_azimuth(((degrees % 360) as u16, (minutes % 60) as u16, (seconds % 60) as f64)) 
-            .unwrap()
-    }
-}
-
-impl std::ops::Add<u64> for DMS {
-    type Output = DMS;
-    fn add (self, rhs: u64) -> Self { 
-        let (d, m, s) = self.to_azimuth();
-        println!("\n({} {} {}) + {}", d, m, s, rhs);
-        let seconds = s as u64 + rhs;
-        let minutes = m as u64 + num_integer::div_floor(seconds, 60);
-        let degrees = d as u64 + num_integer::div_floor(minutes, 60);
-        println!("{}° {}' {}\"", degrees, minutes, seconds);
-        Self::from_azimuth(((degrees % 360) as u16, (minutes % 60) as u16, (seconds % 60) as f64))
-            .unwrap()
-    }
-}
-
-impl std::ops::Sub<u64> for DMS {
-    type Output = DMS;
-    fn sub (self, rhs: u64) -> Self { self.clone() }
-}
-
-impl std::ops::Add<i8> for DMS {
-    type Output = DMS;
-    fn add (self, rhs: i8) -> Self { self + rhs as u64 }
-}
-
-impl std::ops::Add<i16> for DMS {
-    type Output = DMS;
-    fn add (self, rhs: i16) -> Self { self + rhs as u64 }
-}
-
-impl std::ops::Add<i32> for DMS {
-    type Output = DMS;
-    fn add (self, rhs: i32) -> Self { self + rhs as u64 }
 }
 
 impl std::ops::Add<f32> for DMS {
     type Output = DMS;
-    fn add (self, rhs: f32) -> Self { self + rhs as u64 }
+    /// Adds `rhs` fractionnal seconds to Self
+    fn add (self, rhs: f32) -> Self { 
+        self + rhs as f64 
+    }
 }
 
 impl std::ops::Add<f64> for DMS {
     type Output = DMS;
-    fn add (self, rhs: f64) -> Self { self + rhs as u64 }
+    /// Adds `rhs` fractionnal seconds to Self
+    fn add (self, rhs: f64) -> Self { 
+        DMS::from_seconds(self.total_seconds() + rhs)
+    }
 }
 
-impl std::ops::Sub<i8> for DMS {
+impl std::ops::Sub<DMS> for DMS {
     type Output = DMS;
-    fn sub (self, rhs: i8) -> Self { self - rhs as u64 }
-}
-
-impl std::ops::Sub<i16> for DMS {
-    type Output = DMS;
-    fn sub (self, rhs: i16) -> Self { self - rhs as u64 }
-}
-
-impl std::ops::Sub<i32> for DMS {
-    type Output = DMS;
-    fn sub (self, rhs: i32) -> Self { self - rhs as u64 }
-}
-
-impl std::ops::Sub<f32> for DMS {
-    type Output = DMS;
-    fn sub (self, rhs: f32) -> Self { self - rhs as u64 }
+    /// Substracts rhs `D°M'S"` to Self
+    fn sub (self, rhs: Self) -> Self {
+        DMS::from_seconds(self.total_seconds() - rhs.total_seconds()) 
+    }
 }
 
 impl std::ops::Sub<f64> for DMS {
     type Output = DMS;
-    fn sub (self, rhs: f64) -> Self { self - rhs as u64 }
+    /// Substracts `rhs` fractionnal seconds to self
+    fn sub (self, rhs: f64) -> Self { 
+        DMS::from_seconds(self.total_seconds() - rhs)
+    }
 }
 
-impl std::ops::Mul<i8> for DMS {
+impl std::ops::Sub<f32> for DMS {
     type Output = DMS;
-    fn mul (self, rhs: i8) -> Self { self * (rhs as i64) }
+    /// Substracts `rhs` fractionnal seconds to self
+    fn sub (self, rhs: f32) -> Self { 
+        DMS::from_seconds(self.total_seconds() - rhs as f64)
+    }
 }
 
-impl std::ops::Mul<i16> for DMS {
-    type Output = DMS;
-    fn mul (self, rhs: i16) -> Self { self * (rhs as i64) }
-}
-
-impl std::ops::Mul<i32> for DMS {
-    type Output = DMS;
-    fn mul (self, rhs: i32) -> Self { self * (rhs as i64) }
-}
-
+/*
 impl std::ops::Mul for DMS {
     type Output = DMS;
     fn mul (self, rhs: Self) -> Self {
@@ -227,269 +158,47 @@ impl std::ops::Mul for DMS {
     }
 }
 
-impl std::ops::Div for DMS {
-    type Output = DMS;
-    fn div (self, rhs: Self) -> Self {
-        let (d0, m0, s0) = self.to_azimuth();
-        let (d1, m1, s1) = rhs.to_azimuth();
-        let degrees = match d1 > d0 {
-            true => 0,
-            false => d0 / d1,
-        };
-        DMS::from_azimuth((degrees, 0, 0.0))
-            .unwrap()
-    }
-}
-
-impl std::ops::Div<i8> for DMS {
-    type Output = DMS;
-    fn div (self, rhs: i8) -> Self { self / (rhs as i64) }
-}
-
-impl std::ops::Div<i16> for DMS {
-    type Output = DMS;
-    fn div (self, rhs: i16) -> Self { self / (rhs as i64) }
-}
-
-impl std::ops::Div<i32> for DMS {
-    type Output = DMS;
-    fn div (self, rhs: i32) -> Self { self / (rhs as i64) }
-}
-
-impl std::ops::Mul<i64> for DMS {
+impl std::ops::Mul<f64> for DMS {
     type Output = DMS;
     fn mul (self, rhs: i64) -> Self {
-        let (d, m, s) = self.to_azimuth();
-        let mut degrees = (d as i64 * rhs) % 360; 
-        let mut minutes = (m as i64 * rhs) % 60; 
-        let mut seconds = (s as i64 * rhs) % 60;
-        DMS::from_azimuth((degrees as u16, minutes as u16, seconds as f64))
-            .unwrap()
-    }
-}
-
-impl std::ops::Div<i64> for DMS {
-    type Output = DMS;
-    fn div (self, rhs: i64) -> Self {
-        let (d0,m0,s0) = self.to_azimuth();
-        let degrees = d0 / (rhs as u16); 
-        let minutes = m0 / (rhs as u16); 
-        let seconds = s0 / rhs as f64;
-        DMS::from_azimuth((degrees,minutes,seconds))
-            .unwrap()
+        let mut degrees = self.degrees as f64 * rhs; 
+        let mut minutes = self.minutes as f64 * rhs; 
+        let mut seconds = self.seconds as f64 * rhs;
+        DMS {
+            degrees: (degrees.floor() as i16)%360,
+            minutes,
+            seconds,
+        }
     }
 } */
 
 impl DMS {
-    /// Builds `D°M'S"` coordinates from given
-    /// D°, M', S" and optionnal Bearing.
-    /// If Bearing is not provided, this method never fails,
-    /// it will wrapp provided D°M'S" values to correct angle modulo 360°.
-    /// Otherwise, correct angle degrees are expected when Bearing is provided.
-    pub fn new (degrees: u16, minutes: u16, seconds: f64, bearing: Option<Bearing>) -> std::io::Result<DMS> {
-        if let Some(bearing) = bearing {
-            let max = if bearing.is_sub_quadrant() {
-                45
-            } else {
-                90
-            };
-            if degrees > max {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData, format!("Degrees should be < {}", max)))
-            } else {
-                Ok(DMS {
-                    degrees, 
-                    minutes,
-                    seconds,
-                    bearing: Some(bearing),
-                })
-            }
-        } else {
-            let (s_degs, s_mins, seconds) = seconds_wrapping_modulo(seconds); 
-            let (m_degs, minutes) = minutes_wrapping_modulo(minutes + s_mins);
-            Ok(DMS {
-                degrees: (degrees + s_degs + m_degs)%360, 
-                minutes, 
-                seconds, 
-                bearing: None,
-            })
-        }
+    /// Builds `D°M'S"` angle, from given D°, M', S" values.
+    /// This method allows overflow, it will wrapp values to correct range
+    /// itself.
+    pub fn new (degrees: u16, minutes: u8, seconds: f64) -> DMS { 
+        DMS::from_seconds(
+            degrees as f64 * 3600.0 
+            + minutes as f64 * 60.0
+            + seconds)
     }
 
-    /// Returns a rescaled copy of Self, with a corresponding Bearing
-    pub fn with_bearing (&self) -> Self {
-        let mut ret = self.clone();
-        let deg = self.degrees;
-        if deg <= 45 {
-            ret.bearing = Some(Bearing::North)
-        } else if deg <= 90 {
-            ret.bearing = Some(Bearing::NorthEast)
-        } else if deg <= 135 {
-            ret.bearing = Some(Bearing::East)
-        } else if deg <= 180 {
-            ret.bearing = Some(Bearing::SouthEast)
-        } else if deg <= 225 {
-            ret.bearing = Some(Bearing::South)
-        } else if deg <= 270 {
-            ret.bearing = Some(Bearing::SouthWest)
-        } else if deg <= 315 {
-            ret.bearing = Some(Bearing::West)
-        } else {
-            ret.bearing = Some(Bearing::NorthWest)
-        }
-        ret
-    }
-
-    /// Returns a rescaled copy of Self with no Bearing
-    pub fn without_bearing (&self) -> Self {
-        let mut ret = self.clone();
-        if let Some(bearing) = self.bearing {
-            match bearing {
-                Bearing::North => {},
-                Bearing::NorthEast => ret.degrees += 45,   
-                Bearing::East => ret.degrees += 90,
-                Bearing::SouthEast => ret.degrees += 135, 
-                Bearing::South => ret.degrees += 180,
-                Bearing::SouthWest => ret.degrees += 225,   
-                Bearing::West => ret.degrees += 270,
-                Bearing::NorthWest => ret.degrees += 315,
-            }
-        }
-        ret.bearing = None;
-        ret
-    }
-/*
-    /// Buils `D°M'S"` coordinates from a latitude angle ɑ, 
-    /// in decimal degrees. Quadrants are prefered, Subquadrants like NE, NW, SE, SW
-    /// are not used at the momoent.
-    pub fn from_ddeg_latitude (ddeg: f64) -> DMS {
-        let bearing = match ddeg < 0.0 {
-            true => Bearing::South,
-            false => Bearing::North,
-        };
-        let degrees = ddeg.abs().trunc() as u16;
-        let minutes = ((ddeg.abs() - degrees as f64) * 60.0).trunc() as u16;
-        let seconds = (ddeg.abs() - degrees as f64 - (minutes as f64)/60.0_f64) * 3600.0_f64;
+    /// Builds `D°M'S"` angle from total amount of seconds
+    pub fn from_seconds (seconds: f64) -> DMS {
+        let degrees = (seconds / 3600.0).floor();
+        let minutes = ((seconds - degrees * 3600.0) /60.0).floor();
+        let integer = ((seconds - degrees * 3600.0 - minutes*60.0).floor() as u8)%60;
         DMS {
-            degrees,
-            minutes,
-            seconds,
-            bearing,
+            degrees: (degrees as u16)%360,
+            minutes: minutes as u8,
+            seconds: integer as f64 + seconds.fract(),
         }
     }
     
-    /// Buils `D°M'S"` coordinates from a longitude angle ɑ, 
-    /// in decimal degrees. Quadrants are prefered, Subquadrants like NE, NW, SE, SW
-    /// are not used at the momoent.
-    pub fn from_ddeg_longitude (ddeg: f64) -> DMS {
-        let bearing = match ddeg < 0.0 {
-            true => Bearing::West,
-            false => Bearing::East,
-        };
-        let degrees = ddeg.abs().trunc() as u16;
-        let minutes = ((ddeg.abs() - degrees as f64) * 60.0).trunc() as u16;
-        let seconds = (ddeg.abs() - degrees as f64 - (minutes as f64)/60.0_f64) * 3600.0_f64;
-        DMS {
-            degrees,
-            minutes,
-            seconds,
-            bearing,
-        }
-    }
-
-    /// Converts Self into angle ɑ, 
-    /// ɑ expressed in decimal degrees
-    pub fn to_ddeg_angle (&self) -> f64 {
-        let ddeg: f64 = self.degrees as f64
-            + self.minutes as f64 / 60.0_f64
-            + self.seconds as f64 / 3600.0_f64;
-        if self.bearing.is_southern() || self.bearing.is_western() {
-            -ddeg
-        } else {
-            ddeg
-        }
-    }
-    */
-}
-
-#[cfg(test)]
-mod tests {
-    use super::minutes_wrapping_modulo;
-    use super::seconds_wrapping_modulo;
-    #[test]
-    fn test_seconds_modulo() {
-        assert_eq!(seconds_wrapping_modulo(59.0), (0, 0, 59.0));
-        assert_eq!(seconds_wrapping_modulo(59.8), (0, 0, 59.8));
-        assert_eq!(seconds_wrapping_modulo(59.9), (0, 0, 59.9));
-        assert_eq!(seconds_wrapping_modulo(60.0), (0, 1, 0.0));
-        let (d,m,s) = seconds_wrapping_modulo(60.1);
-        assert_eq!((d, m), (0, 1)); 
-        assert_float_relative_eq!(s, 0.1, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(60.2);
-        assert_eq!((d, m), (0, 1)); 
-        assert_float_relative_eq!(s, 0.2, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(60.4);
-        assert_eq!((d, m), (0, 1)); 
-        assert_float_relative_eq!(s, 0.4, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(61.0);
-        assert_eq!((d, m), (0, 1)); 
-        assert_float_relative_eq!(s, 1.0, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(61.1);
-        assert_eq!((d, m), (0, 1)); 
-        assert_float_relative_eq!(s, 1.1, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(61.2);
-        assert_eq!((d, m), (0, 1)); 
-        assert_float_relative_eq!(s, 1.2, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(119.99);
-        assert_eq!((d, m), (0, 1)); 
-        assert_float_relative_eq!(s, 59.99, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(120.0);
-        assert_eq!((d, m), (0, 2)); 
-        assert_float_relative_eq!(s, 0.0, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(120.1);
-        assert_eq!((d, m), (0, 2)); 
-        assert_float_relative_eq!(s, 0.1, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(120.2);
-        assert_eq!((d, m), (0, 2)); 
-        assert_float_relative_eq!(s, 0.2, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(121.2);
-        assert_eq!((d, m), (0, 2));
-        assert_float_relative_eq!(s, 1.2, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3599.98);
-        assert_eq!((d, m), (0, 59));
-        assert_float_relative_eq!(s, 59.98, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3599.998);
-        assert_eq!((d, m), (0, 59));
-        assert_float_relative_eq!(s, 59.998, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3599.999);
-        assert_eq!((d, m), (0, 59));
-        assert_float_relative_eq!(s, 59.999, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3600.0);
-        assert_eq!((d, m), (1, 0));
-        assert_float_relative_eq!(s, 0.0, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3600.1);
-        assert_eq!((d, m), (1, 0));
-        assert_float_relative_eq!(s, 0.1, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3600.2);
-        assert_eq!((d, m), (1, 0));
-        assert_float_relative_eq!(s, 0.2, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3799.99);
-        assert_eq!((d, m), (1, 3));
-        assert_float_relative_eq!(s, 19.99, 1e-6);
-        let (d,m,s) = seconds_wrapping_modulo(3899.99);
-        assert_eq!((d, m), (1, 4));
-        assert_float_relative_eq!(s, 59.99, 1e-6);
-    }
-    #[test]
-    fn test_minute_modulo() {
-        assert_eq!(minutes_wrapping_modulo(59), (0, 59));
-        assert_eq!(minutes_wrapping_modulo(60), (1, 0));
-        assert_eq!(minutes_wrapping_modulo(61), (1, 1));
-        assert_eq!(minutes_wrapping_modulo(62), (1, 2));
-        assert_eq!(minutes_wrapping_modulo(122), (2, 2));
-        assert_eq!(minutes_wrapping_modulo(3599), (59, 59));
-        assert_eq!(minutes_wrapping_modulo(3600), (60, 0));
-        assert_eq!(minutes_wrapping_modulo(3601), (60, 1));
-        assert_eq!(minutes_wrapping_modulo(3602), (60, 2));
+    /// Returns total of seconds (base unit) contained in Self
+    pub fn total_seconds (&self) -> f64 {
+        self.degrees as f64 * 3600.0
+        + self.minutes as f64 * 60.0
+            + self.seconds
     }
 }

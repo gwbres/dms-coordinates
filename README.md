@@ -7,24 +7,69 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](https://github.com/gwbres/dms-coordinates/blob/main/LICENSE-APACHE)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/gwbres/dms-coordinates/blob/main/LICENSE-MIT) 
 
-Rust Crate for D°M'S'' coordinates manipulation, used in navigation  :sailboat: :airplane: :ship:
+Rust Crate for D°M'S" coordinates manipulation, used in navigation :sailboat: :airplane: :ship:
 
-### `D°M'S''` (1D coordinates)
+This crate exposes several structures
+* D° M' S" is core struct, which represents an angle |ɑ| < 360°
+* DMS1d to represent either 
+ * a latitude angle |ɑ| < 90°
+ * or a longitude angle |ɑ| < 180°
+* DMS3d to represent 3D coordinates on Earth
+* Bearing: for navigation purposes
 
-`D°M'S''` represents 1D coordinates with an associated bearing
+### `D°M'S"` (1D coordinates)
+
+`D°M'S"` represents 1D coordinates
 
 ```rust
-// NY latitude coordinates 
-let ny = DMS::new(40, 43, 50.196, Bearing::North)
-    .unwrap();
-assert_eq!(ny.degrees, 40);
-assert_eq!(ny.minutes, 43);
-assert_eq!(ny.bearing, Bearing::North);
+use dms_coordinates::{DMS, Bearing};
+let dms = DMS::new(40, 43, 50.196, Bearing::North);
+assert_eq!(dms.degrees, 40);
+assert_eq!(dms.minutes, 43);
+assert_eq!(dms.bearing, Bearing::North);
 ```
 
-Angle must be properly defined, depending on the desired `Bearing`
-* when using plain bearings like N, S, E, W: D <= 90°
-* when using sub quadrant bearings like NE, NW, SE, SW: D <= 45° is expected
+As long as you're not specifying a `Bearing`,
+the `D°M'S"` constructore is flexible and will accept any angle values.
+For example:
+```rust
+// S" overflow
+let dms = DMS::new(90, 10, 61.0, None);
+assert_eq!(dms.is_ok(), true); // is tolerated
+assert_eq!(dms.degrees, 90);
+assert_eq!(dms.minutes, 11);
+assert_eq!(dms.seconds, 1.0);
+
+// M' + S" overflow
+let dms = DMS::new(88, 60, 61.0, None);
+assert_eq!(dms.is_ok(), true); // is tolerated
+assert_eq!(dms.degrees, 90);
+assert_eq!(dms.minutes, 0);
+assert_eq!(dms.seconds, 1.0);
+
+// D° + M' + S" overflow
+let dms = DMS::new(360, 61, 61.0, None);
+assert_eq!(dms.is_ok(), true); // is tolerated
+assert_eq!(dms.degrees, 1);
+assert_eq!(dms.minutes, 2);
+assert_eq!(dms.seconds, 1.0);
+```
+
+But when using N, S, E, W bearings,
+we expect D° < 180:
+
+```rust
+// NE for example
+let dms = DMS::new(44, 0, 59.0, Some(Bearing::NorthEast));
+assert_eq!(dms.is_ok(), true); // valid NE heading
+
+// E heading with S" overflow
+let dms = DMS::new(179, 58, 60.0, Some(Bearing::East));
+assert_eq!(dms.is_ok(), true); // still a valid E heading
+assert_eq!(dms.degrees, 179);
+assert_eq!(dms.minutes, 59); // overflow
+assert_eq!(dms.minutes, 0.0); // overflow
+```
 
 ```rust
 // 89° is ok for North bearing

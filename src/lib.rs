@@ -2,13 +2,15 @@
 //! mainly in navigation applications.   
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
 mod dms;
-mod dms3d;
-mod bearing;
+//mod dms1d;
+//mod dms3d;
+mod cardinal;
 
 pub use crate::{
     dms::*,
-    dms3d::*,
-    bearing::*
+//    dms1d::*,
+//    dms3d::*,
+    cardinal::*
 };
 
 use initial_conditions::EARTH_RADIUS;

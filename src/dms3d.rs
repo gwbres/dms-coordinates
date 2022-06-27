@@ -1,6 +1,5 @@
 //! 3D D°M'S" coordinates
 use thiserror::Error;
-use std::io::{ErrorKind};
 use initial_conditions::EARTH_RADIUS;
 use serde_derive::{Serialize, Deserialize};
 use crate::{DMS, Bearing, projected_distance};
@@ -33,6 +32,7 @@ impl std::fmt::Display for DMS3d {
     }
 }
 
+/*
 impl Default for DMS3d {
     fn default() -> Self {
         Self {
@@ -265,3 +265,4 @@ impl From<rust_3d::Point3D> for DMS3d {
         Self::from_cartesian(item)
     }
 }
+*/
