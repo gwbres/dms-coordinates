@@ -1,14 +1,12 @@
 //! Angle representation in D°M'S" (sexagesimal format).
 //! Supports arithmetics operation, up to double precision,
 //! for easy navigation calculations.
+use crate::cardinal::Cardinal;
 use serde_derive::{Serialize, Deserialize};
 
-/// Total number of seconds in 360 degrees
-const UNIT_CIRCLE_SECONDS : u32 = 360 * 3600;
-
-/// `D°M'S"` represents one angle 
+/// Angle expressed as `D°M'S"`, 
 /// in Degrees D°, Minutes M' and fractionnal
-/// Seconds S" (double precision)
+/// Seconds S" (double precision) with an optionnal Cardinal.
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS {
@@ -18,6 +16,8 @@ pub struct DMS {
     pub minutes: u8,
     /// Seconds with fraction 0 <= S" < 60 
     pub seconds: f64,
+    /// Optionnal cardinal associated to this angle
+    pub cardinal: Option<Cardinal>,
 }
 
 pub enum Scale {
@@ -43,11 +43,20 @@ pub enum Scale {
 
 impl std::fmt::Display for DMS {
     fn fmt (&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}°{}'{}\"", 
-            self.degrees, 
-            self.minutes, 
-            self.seconds,
-        )
+        if let Some(cardinal) = self.cardinal {
+            write!(f, "{}°{}'{}\"{}",
+                self.degrees, 
+                self.minutes, 
+                self.seconds,
+                cardinal,
+            )
+        } else {
+            write!(f, "{}°{}'{}\"", 
+                self.degrees,
+                self.minutes,
+                self.seconds,
+            )
+        }
     }
 }
 
@@ -58,6 +67,7 @@ impl Default for DMS {
             degrees: 0,
             minutes: 0,
             seconds: 0.0_f64,
+            cardinal: None,
         }
     }
 }
@@ -310,11 +320,25 @@ impl DMS {
     /// Builds `D°M'S"` angle, from given D°, M', S" values.
     /// This method allows overflow, it will wrapp values to correct range
     /// itself.
-    pub fn new (degrees: u16, minutes: u8, seconds: f64) -> DMS { 
-        DMS::from_seconds(
+    pub fn new (degrees: u16, minutes: u8, seconds: f64, cardinal: Option<Cardinal>) -> DMS { 
+        let mut d =  DMS::from_seconds(
             degrees as f64 * 3600.0 
-            + minutes as f64 * 60.0
-            + seconds)
+                + minutes as f64 * 60.0
+                    + seconds);
+        if let Some(cardinal) = cardinal {
+            d.with_cardinal(cardinal)
+        }
+        d
+    }
+
+    /// Returns same D°M'S" angle but attaches a cardinal to it
+    pub fn with_cardinal (&self, cardinal: Cardinal) -> DMS {
+        DMS {
+            degrees: self.degrees,
+            minutes: self.minutes,
+            seconds: self.seconds,
+            cardinal: Some(cardinal),
+        }
     }
 
     /// Builds `D°M'S"` angle from total amount of seconds
@@ -327,6 +351,21 @@ impl DMS {
             minutes: minutes as u8,
             seconds: integer as f64 + seconds.fract(),
         }
+    }
+
+    /// Adds given angle expressed a decimal degrees
+    pub fn add_ddeg (&mut self, angle: f64) {
+
+    }
+
+    /// Returns copy of Self with given angle added, as decimal degrees
+    pub fn with_ddeg_angle (&self, angle: f64) -> DMS {
+
+    }
+
+    /// Returns D°M'S" angle expressed in decimal degrees
+    pub fn to_ddeg_angle (&self) -> f64 {
+        self.
     }
 
     /// Returns total of seconds (base unit) contained in Self
