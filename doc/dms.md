@@ -9,15 +9,18 @@ D°M'S"
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/gwbres/dms-coordinates/blob/main/LICENSE-MIT) 
 
 `D°M'S"` represents an angle in sexagesimal format, where
-* D° for degrees, positive integer where 0 <= D° < 360°
+* D° for degrees, positive integer, 0 <= D° < 360° in case
+no cardinal associated to it
 * M' for minutes, 0 <= M' < 60, 60'=1D°
 * S" for fractionnal seconds, double precision, 0 <= S" < 60, 60"=1'
+* Optionnal Cardinal point, among "N", "S", "E", "W"
 
 ```rust
-let dms = dms_coordinates::DMS::new(40, 43, 50.196);
+let dms = dms_coordinates::DMS::new(40, 43, 50.196, None);
 assert_eq!(dms.degrees, 40);
 assert_eq!(dms.minutes, 43);
 assert_float_relative_eq!(dms.seconds, 50.196, 1E-6); 
+assert_eq!(dms.cardinal, None);
 ```
 
 A couple other methods are available

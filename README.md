@@ -13,5 +13,7 @@ This crate exposes several structures
 
 * [Cardinal points](doc/cardinal.md) of a compass rose
 * [D° M' S"](doc/dms.md) to represent an angle as Degrees, Minutes and fractionnal seconds,
-so called "sexagesimal" format
-* [DMS 1D/3D](doc/dms3d.md) to represent Latitude, Longitude and 3D coordinates
+so called "sexagesimal" format, with an optionnal Cardinal. This object
+can be used to represent Latitude / Longitude angles
+* [DMS 3D](doc/dms3d.md) comprises a Latitude, a Longitude angle and optionnal altitude
+(3D coordinates)
