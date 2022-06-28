@@ -111,11 +111,15 @@ mod dms_tests {
         assert_float_relative_eq!(d.seconds, 15.3, 1E-6);
     }
     #[test]
-    fn test_mul_float() {
-        let d0 = DMS::new(101, 23, 16.3);
-        let d = d0 * 1.0_f64;
+    fn test_mul_int() {
+        let d0 = DMS::new(101, 23, 16.0);
+        let d = d0 * 1_u32;
         assert_eq!(d.degrees, 101);
         assert_eq!(d.minutes, 23);
-        assert_float_relative_eq!(d.seconds, 16.3, 1E-6);
+        assert_eq!(d.seconds, 16.0);
+        let d0 = DMS::new(101, 23, 16.0);
+        let d = d0 * 2_u8;
+        assert_eq!(d.degrees, 202);
+        assert_eq!(d.minutes, 46);
     }
 }

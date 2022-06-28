@@ -89,19 +89,10 @@ assert_eq!(d.minutes, 17);
 assert_eq!(d.seconds, 50.0);
 ```
 
-D°M'S" (*) D°M'S" is possible, although I doubt it has a practical use
-```rust
-let d0 = DMS::new(0, 20, 55.0);
-let d1 = DMS::new(0, 3, 5.0);
-let d = d0 * d1;
-```
+* D°M'S" (*) D°M'S" is not feasible
+* D°M'S" (/) D°M'S" is not feasible
 
-D°M'S" (/) D°M'S" is possible, although I doubt it has a practical use
-```rust
-let d0 = DMS::new(0, 20, 55.0);
-let d1 = DMS::new(0, 3, 5.0);
-let d = d0 / d1;
-```
+I doubt these have a practical use
 
 ### Operations with a number
 

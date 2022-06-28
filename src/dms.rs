@@ -154,16 +154,6 @@ impl std::ops::Sub<f32> for DMS {
     }
 }
 
-impl std::ops::Mul for DMS {
-    type Output = DMS;
-    /// Multiplies Self by `rhs`
-    fn mul (self, rhs: Self) -> Self {
-        DMS::from_seconds(
-            self.total_seconds() * rhs.total_seconds()
-        )
-    }
-}
-
 impl std::ops::Mul<f64> for DMS {
     type Output = DMS;
     /// Multiplies Self by `rhs` fractionnal factor
@@ -220,16 +210,6 @@ impl std::ops::Mul<u8> for DMS {
     fn mul (self, rhs: u8) -> Self {
         DMS::from_seconds(
             self.total_seconds() * rhs as f64
-        )
-    }
-}
-
-impl std::ops::Div for DMS {
-    type Output = DMS;
-    /// Divides Self by `rhs`
-    fn div (self, rhs: Self) -> Self {
-        DMS::from_seconds(
-            self.total_seconds() / rhs.total_seconds()
         )
     }
 }
@@ -325,13 +305,15 @@ impl DMS {
     }
 
     /// Converts self to radians,
-    /// we consider 1 hour = 15° from the rotation of the Earth
+    /// we consider 1 hour = 15° from the rotation of the Earth,
+    /// when converting to radians
     pub fn to_radians (&self) -> f64 {
         self.total_seconds() / 5E-6_f64
     }
 
     /// Builds `D°M'S"` from angle in radians,
-    /// we consider 1 hour = 15° from the rotation of the Earth
+    /// we consider 1 hour = 15° from the rotation of the Earth,
+    /// when converting to radians
     pub fn from_radians (rad: f64) -> DMS {
         DMS::from_seconds(rad *5E-6_f64)
     }
