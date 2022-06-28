@@ -1,20 +1,25 @@
 //! 3D D°M'S" coordinates
+use regex::Regex;
 use thiserror::Error;
 use initial_conditions::EARTH_RADIUS;
 use serde_derive::{Serialize, Deserialize};
 use crate::{DMS, Cardinal, projected_distance};
 
-/// 1D D°M'S" represents either a Latitude or Longitude coordinates, 
-/// with one angle in Degrees, Minutes, Seconds and one Cardinal
-pub struct DMS1d {
-    /// Angle in D°M'S" format with fractionnal seconds, double precision.
-    /// Angle must be |D°| < x for a Latitude,
-    /// Angle must be |D°| < x for a Longitude,
+pub struct DMS1d { 
+    /// Angle in D°M'S" format with fractionnal seconds, double precision
+    /// but modified wrapping behavior 
     pub dms: DMS,
     /// "N"/"S" Cardinal for a Latitude,
-    /// "E" / "W" Cardinal for a Longitude,
     pub cardinal: Cardinal,
 }
+
+/// Latitude coordinates, with angle expressed in D°M'S" sexagesimal format
+/// Angle must be |D| < 90°
+pub type Latitude = DMS1d;
+
+/// Latitude coordinates, with angle expressed in D°M'S" sexagesimal format
+/// Angle must be |D| < 180°
+pub type Longitude = DMS1d;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -24,10 +29,27 @@ pub enum Error {
     DegreesRangeError(u8),
 }
 
-impl DMS1d {
+#[derive(Error, Debug)]
+pub enum ParseError {
+    #[error("format is not recognized")]
+    FormatNotRecognized,
+    #[error("failed to parse int number")]
+    ParseIntError(#[from] std::num::ParseIntError),
+}
+
+impl Latitude {
     /// Builds either Latitude or Longitude coordinates
     /// from given values. Values should match predefined ranges
     pub fn new (degrees: i8, minutes: u16, seconds: f64, cardinal: Cardinal) -> Result<DMS1d, Error> {
+        match cardinal {
+            Cardinal::North | Cardinal::South {
+                if angle.abs() < 90 {
+
+                }
+            },
+            _ => Err(Error::CardinalError)
+        }
+    }
         if cardinal.is_latitude() {
             if angle.abs() < 90 {
                 Ok(Self {
@@ -76,6 +98,81 @@ impl DMS1d {
             Err(Error::DegreesRangeError(180))
         }
     }
+    
+    /// Parses Latitude or Longitude coordinates from given `str` descriptor.
+    /// Descriptor must follow standard formats:
+    ///     +DDD.D  : sign + 3 digit "." + 1digit
+    ///     Degrees specified, minutes = 0, seconds = 0
+    ///     +DDDMM.M : sign + 3 digit D° + 2 digit M' "." 1 digit M'
+    ///     Degrees + minutes specified
+    ///     +DDDMMSS.S : sign + 3 digit D° + 2 digit M' + fractionnal seconds
+    /// <!> Although standards says "+" is mandatory to describe positive D°,
+    /// this method tolerates a missing '+' and we interprate D° as positive value.
+    pub fn from_str (s: &str) -> Result<Self, ParseError> {
+        let lon_positive_d = Regex::new(r"^+\d{3}.\d{1}$")
+            .unwrap();
+        let lon_negative_d = Regex::new(r"^-\d{3}.\d{1}$")
+            .unwrap();
+        let lon_positive_dm = Regex::new(r"^+\d{3}d{2}.\d{1}$")
+            .unwrap();
+        let lon_negative_dm = Regex::new(r"^-\d{d}d{2}.\d{1}$")
+            .unwrap();
+        let lon_positive_dms = Regex::new(r"^+\d{3}d{2}d{2}.\d{1}$")
+            .unwrap();
+        let lon_negative_dms = Regex::new(r"^-\d{3}d{2}d{2}.\d{1}$")
+            .unwrap();
+        if lon_positive_d.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+        } else if lon_negative_d.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_positive_dm.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_negative_dm.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_positive_dms.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_negative_dms.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+        
+        } else {
+            Err(ParseError::FormatNotRecognized)
+        }
+    }
+    
 }
 
 /// `3D D°M'S" coordinates
