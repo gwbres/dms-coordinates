@@ -62,4 +62,18 @@ mod dms_tests {
         let d = DMS::new(43, 49, 54.114, Some(Cardinal::West));
         assert_float_relative_eq!(d.to_ddeg_angle(), -43.83169, 1E-6);
     }
+    #[test]
+    fn test_float_cast() {
+        let d = DMS::new(3, 21, 25.255, Some(Cardinal::South));
+        let ddeg : f64 = d.into();
+        assert_float_relative_eq!(ddeg, -3.3570127, 1E-6);
+        let ddeg : f32 = d.into();
+        assert_float_relative_eq!(ddeg, -3.3570127, 1E-6);
+    }
+    #[test]
+    fn test_int_cast() {
+        let d = DMS::new(10, 21, 45.0, None);
+        let secs : u32 = d.into();
+        assert_eq!(secs, 10*3600 + 21*60 +45);
+    }
 }
