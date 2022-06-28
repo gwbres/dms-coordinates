@@ -134,11 +134,10 @@ impl std::ops::Add<DMS> for DMS {
     type Output = Result<Self, OpsError>;
     /// Adds `D°M'S"` coordinates together
     fn add (self, rhs: Self) -> Result<Self, OpsError> {
-        let d0 = self.to_ddeg_angle();
-        let d1 = self.to_ddeg_angle();
-        let a = d0 + d1;
         if let Some(c0) = self.cardinal {
             if let Some(c1) = rhs.cardinal {
+                let a = self.to_ddeg_angle()
+                    + self.to_ddeg_angle();
                 if c0.is_latitude() && c1.is_latitude() {
                     Ok(Self::from_ddeg_latitude(a))
                 } else if c0.is_longitude() && c1.is_longitude() {
@@ -147,27 +146,31 @@ impl std::ops::Add<DMS> for DMS {
                     Err(OpsError::IncompatibleCardinals)    
                 }
             } else {
-                Ok(Self::from_ddeg_angle(a))
+                Ok(Self::from_seconds(self.total_seconds()
+                    + rhs.total_seconds()))
             }
         } else {
-            if let Some(c) = rhs.cardinal {
-                if c.is_latitude() {
-                    Ok(Self::from_ddeg_latitude(a))
-                } else {
-                    Ok(Self::from_ddeg_longitude(a))
-                }
-            } else {
-                Ok(Self::from_ddeg_angle(a))
-            }
+            Ok(Self::from_seconds(self.total_seconds()
+                + rhs.total_seconds()))
         }
     }
 }
 
 impl std::ops::Add<f64> for DMS {
     type Output = Self;
-    /// Adds `rhs` fractionnal seconds to Self
+    /// Adds `rhs` decimal degrees if we have a cardinal,
+    /// otherwise adds fractionnal seconds to Self
     fn add (self, rhs: f64) -> Self { 
-        DMS::from_seconds(self.total_seconds() + rhs)
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() + rhs;
+            if cardinal.is_latitude() {
+                Self::from_ddeg_latitude(a)
+            } else {
+                Self::from_ddeg_longitude(a)
+            }
+        } else {
+            Self::from_seconds(self.total_seconds() + rhs)
+        }
     }
 }
 

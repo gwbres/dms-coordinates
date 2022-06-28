@@ -76,4 +76,22 @@ mod dms_tests {
         let secs : u32 = d.into();
         assert_eq!(secs, 10*3600 + 21*60 +45);
     }
+    #[test]
+    fn test_add_ops() {
+        let d0 = DMS::new(10, 21, 45.0, None);
+        let d1 = DMS::new(0, 10, 10.0, None);
+        let d = (d0+d1).unwrap();
+        assert_eq!(d.degrees, 10);
+        assert_eq!(d.minutes, 31);
+        assert_eq!(d.seconds, 55.0);
+        assert_eq!(d.cardinal, None);
+        
+        let d0 = d0.with_cardinal(Cardinal::North);
+        let d1 = d1.with_cardinal(Cardinal::North);
+        let d = (d0+d1).unwrap();
+        assert_eq!(d.degrees, 10);
+        assert_eq!(d.minutes, 31);
+        assert_eq!(d.seconds, 55.0);
+        assert_eq!(d.cardinal, None);
+    }
 }
