@@ -154,6 +154,38 @@ impl std::ops::Sub<f32> for DMS {
     }
 }
 
+impl std::ops::Sub<u64> for DMS {
+    type Output = DMS;
+    /// Substracts `rhs` seconds with no fractionnal part to Self
+    fn sub (self, rhs: u64) -> Self {
+        DMS::from_seconds(self.total_seconds() - rhs as f64)
+    }
+}
+
+impl std::ops::Sub<u32> for DMS {
+    type Output = DMS;
+    /// Substracts `rhs` seconds with no fractionnal part to Self
+    fn sub (self, rhs: u32) -> Self {
+        DMS::from_seconds(self.total_seconds() - rhs as f64)
+    }
+}
+
+impl std::ops::Sub<u16> for DMS {
+    type Output = DMS;
+    /// Substracts `rhs` seconds with no fractionnal part to Self
+    fn sub (self, rhs: u16) -> Self {
+        DMS::from_seconds(self.total_seconds() - rhs as f64)
+    }
+}
+
+impl std::ops::Sub<u8> for DMS {
+    type Output = DMS;
+    /// Substracts `rhs` seconds with no fractionnal part to Self
+    fn sub (self, rhs: u8) -> Self {
+        DMS::from_seconds(self.total_seconds() - rhs as f64)
+    }
+}
+
 impl std::ops::Mul<f64> for DMS {
     type Output = DMS;
     /// Multiplies Self by `rhs` fractionnal factor

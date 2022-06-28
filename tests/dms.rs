@@ -101,6 +101,11 @@ mod dms_tests {
         assert_eq!(d.degrees, 51);
         assert_eq!(d.minutes, 8);
         assert_float_relative_eq!(d.seconds, 10.0, 1E-6);
+        let d0 = DMS::new(71, 18, 50.0);
+        let d = d0 - 50_u32;
+        assert_eq!(d.degrees, 71);
+        assert_eq!(d.minutes, 18);
+        assert_eq!(d.seconds, 0.0);
     }
     #[test]
     fn test_sub_float() {
@@ -109,6 +114,33 @@ mod dms_tests {
         assert_eq!(d.degrees, 101);
         assert_eq!(d.minutes, 23);
         assert_float_relative_eq!(d.seconds, 15.3, 1E-6);
+    }
+    #[test]
+    fn test_sub_int() {
+        let d0 = DMS::new(71, 18, 50.0);
+        let d = d0 - 51_u32;
+        assert_eq!(d.degrees, 71);
+        assert_eq!(d.minutes, 17);
+        assert_eq!(d.seconds, 59.0);
+        let d0 = DMS::new(71, 18, 50.0);
+        let d = d0 - 52_u32;
+        assert_eq!(d.degrees, 71);
+        assert_eq!(d.minutes, 17);
+        assert_eq!(d.seconds, 58.0);
+        let d0 = DMS::new(71, 1, 50.0);
+        let d = d0 - 50_u32;
+        assert_eq!(d.degrees, 71);
+        assert_eq!(d.minutes, 1);
+        assert_eq!(d.seconds, 0.0);
+        let d = d0 - 51_u32;
+        assert_eq!(d.degrees, 71);
+        assert_eq!(d.minutes, 0);
+        assert_eq!(d.seconds, 59.0);
+        let d0 = DMS::new(71, 0, 50.0);
+        let d = d0 - 51_u32;
+        assert_eq!(d.degrees, 70);
+        assert_eq!(d.minutes, 59);
+        assert_eq!(d.seconds, 59.0);
     }
     #[test]
     fn test_mul_int() {
