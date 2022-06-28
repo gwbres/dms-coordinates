@@ -2,6 +2,7 @@
 //! mainly in navigation applications.   
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
 mod dms;
+mod angle;
 //mod dms1d;
 //mod dms3d;
 mod cardinal;
