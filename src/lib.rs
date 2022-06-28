@@ -1,24 +1,15 @@
 //! Package to manipulate 1D and 3D D°M'S'' coordinates,
 //! mainly in navigation applications.   
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
-mod dms;
-mod angle;
-//mod dms1d;
-//mod dms3d;
-mod cardinal;
+pub mod dms;
+pub mod cardinal;
 
 pub use crate::{
-    dms::*,
-//    dms1d::*,
-//    dms3d::*,
-    cardinal::*
+    dms::DMS,
+    cardinal::Cardinal,
 };
 
 use initial_conditions::EARTH_RADIUS;
-
-#[cfg(test)]
-#[macro_use]
-extern crate assert_float_eq;
 
 /// Returns distance (m) between two decimal degrees coordinates
 /// coord1: (lat,lon), coord2: (lat, lon)
@@ -31,3 +22,7 @@ pub fn projected_distance (coord1: (f64,f64), coord2: (f64,f64)) -> f64 {
     let c = 2.0_f64 * a.powf(0.5_f64).atan2((1.0-a).powf(0.5_f64));
     EARTH_RADIUS * c
 }
+
+#[cfg(test)]
+#[macro_use]
+extern crate assert_float_eq;

@@ -1,5 +1,4 @@
-use dms_coordinates::Cardinal;
-
+use dms_coordinates::cardinal::Cardinal;
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -81,5 +80,7 @@ mod tests {
         assert_eq!(Cardinal::East +90, Cardinal::South);
         assert_eq!(Cardinal::NorthEast +315, Cardinal::North);
         assert_eq!(Cardinal::NorthEast +225, Cardinal::West);
+        assert_eq!(Cardinal::North + 360 +180, Cardinal::South);
+        assert_eq!(Cardinal::NorthEast + 360 +180, Cardinal::SouthWest);
     }
 }

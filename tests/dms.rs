@@ -1,4 +1,4 @@
-use dms_coordinates::{Cardinal, DMS};
+use dms_coordinates::{DMS, Cardinal};
 
 #[cfg(test)]
 #[macro_use]
@@ -7,151 +7,59 @@ mod dms_tests {
     use super::*;
     #[test]
     fn constructor() {
-        let dms = DMS::new(25, 38, 29.495);
+        let dms = DMS::new(25, 38, 29.495, None);
         assert_eq!(dms.degrees, 25);
         assert_eq!(dms.minutes, 38);
-        assert_float_relative_eq!(dms.seconds, 29.495, 1E-6);
+        assert!((29.495 - dms.seconds).abs() < 1E-6, true);
         
-        let dms = DMS::new(90, 59, 59.999);
+        let dms = DMS::new(90, 59, 59.999, None);
         assert_eq!(dms.degrees, 90);
         assert_eq!(dms.minutes, 59);
-        assert_float_relative_eq!(dms.seconds, 59.999, 1E-6);
+        assert!((59.999 - dms.seconds).abs() < 1E-6, true);
         
-        let dms = DMS::new(180, 40, 29.495);
+        let dms = DMS::new(180, 40, 29.495, None);
         assert_eq!(dms.degrees, 180);
         assert_eq!(dms.minutes, 40);
-        assert_float_relative_eq!(dms.seconds, 29.495, 1E-6);
+        assert!((29.495 - dms.seconds).abs() < 1E-6, true);
     }
     #[test]
     fn wrapping_constructor() {
-        let dms = DMS::new(91, 59, 61.0);
+        let dms = DMS::new(91, 59, 61.0, None);
         assert_eq!(dms.degrees, 92);
         assert_eq!(dms.minutes, 0);
-        assert_float_relative_eq!(dms.seconds, 1.0, 1E-6);
+        assert!((1.0 - dms.seconds).abs() < 1E-6, true);
         
-        let dms = DMS::new(359, 59, 61.0);
+        let dms = DMS::new(359, 59, 61.0, None);
         assert_eq!(dms.degrees, 0);
         assert_eq!(dms.minutes, 0);
-        assert_float_relative_eq!(dms.seconds, 1.0, 1E-6);
+        assert!((1.0 - dms.seconds).abs() < 1E-6, true);
         
-        let dms = DMS::new(359, 58, 61.0);
+        let dms = DMS::new(359, 58, 61.0, None);
         assert_eq!(dms.degrees, 359);
         assert_eq!(dms.minutes, 59);
-        assert_float_relative_eq!(dms.seconds, 1.0, 1E-6);
+        assert!((1.0 - dms.seconds).abs() < 1E-6, true);
     } 
     #[test]
     fn total_seconds() {
-        let dms = DMS::new(0, 0, 59.9);
-        assert_float_relative_eq!(dms.total_seconds(), 59.9, 1E-6);
+        let dms = DMS::new(0, 0, 59.9, None);
+        assert!((dms.total_seconds() - 59.9).abs() < 1E-6);
+        let dms = DMS::new(0, 10, 59.9, None);
+        assert!((dms.total_seconds() - 659.9).abs() < 1E-6);
     }
     #[test]
-    fn seconds_cast() {
-        let dms = DMS::new(0, 0, 59.9);
-        let seconds : f64 = dms.into();
-        assert_float_relative_eq!(seconds, 59.9, 1E-6);
-        let seconds : u32 = dms.into();
-        assert_eq!(seconds, 59);
-    }
-    #[test]
-    fn test_add_dms() {
-        let d0 = DMS::new(71, 18, 50.0);
-        let d1 = DMS::new(83, 2, 40.3);
-        let d = d0 + d1;
-        assert_eq!(d.degrees, 154);
+    fn test_from_ddeg() {
+        let d = DMS::from_ddeg_angle(3.357015);
+        assert_eq!(d.degrees, 3);
         assert_eq!(d.minutes, 21);
-        assert_float_relative_eq!(d.seconds, 30.3, 1E-6);
-        let d0 = DMS::new(101, 23, 16.3);
-        let d1 = DMS::new(2, 59, 31.3);
-        let d = d0 + d1;
-        assert_eq!(d.degrees, 104);
-        assert_eq!(d.minutes, 22);
-        assert_float_relative_eq!(d.seconds, 47.6, 1E-6);
-        let d0 = DMS::new(68, 45, 53.8);
-        let d1 = DMS::new(12, 10, 31.3);
-        let d = d0 + d1;
-        assert_eq!(d.degrees, 80);
-        assert_eq!(d.minutes, 56);
-        assert_float_relative_eq!(d.seconds, 25.1, 1E-6);
+        assert_float_relative_eq!(d.seconds, 25.254, 1E-6);
+        assert_eq!(d.cardinal, None);
     }
     #[test]
-    fn test_add_float() {
-        let d0 = DMS::new(101, 23, 16.3);
-        let d = d0 + 1.0_f64;
-        assert_eq!(d.degrees, 101);
-        assert_eq!(d.minutes, 23);
-        assert_float_relative_eq!(d.seconds, 17.3, 1E-6);
-        
-        let d0 = DMS::new(101, 23, 16.3);
-        let d = d0 + 1.7_f64;
-        assert_eq!(d.degrees, 101);
-        assert_eq!(d.minutes, 23);
-        assert_float_relative_eq!(d.seconds, 18.0, 1E-6);
-        
-        let d0 = DMS::new(99, 58, 59.8);
-        let d = d0 + 0.2_f64;
-        assert_eq!(d.degrees, 99);
-        assert_eq!(d.minutes, 59);
-        assert_float_relative_eq!(d.seconds, 0.0, 1E-6);
-    }
-    #[test]
-    fn test_sub_dms() {
-        let d0 = DMS::new(71, 18, 50.0);
-        let d1 = DMS::new(20, 10, 40.0);
-        let d = d0 - d1;
-        assert_eq!(d.degrees, 51);
-        assert_eq!(d.minutes, 8);
-        assert_float_relative_eq!(d.seconds, 10.0, 1E-6);
-        let d0 = DMS::new(71, 18, 50.0);
-        let d = d0 - 50_u32;
-        assert_eq!(d.degrees, 71);
-        assert_eq!(d.minutes, 18);
-        assert_eq!(d.seconds, 0.0);
-    }
-    #[test]
-    fn test_sub_float() {
-        let d0 = DMS::new(101, 23, 16.3);
-        let d = d0 - 1.0_f64;
-        assert_eq!(d.degrees, 101);
-        assert_eq!(d.minutes, 23);
-        assert_float_relative_eq!(d.seconds, 15.3, 1E-6);
-    }
-    #[test]
-    fn test_sub_int() {
-        let d0 = DMS::new(71, 18, 50.0);
-        let d = d0 - 51_u32;
-        assert_eq!(d.degrees, 71);
-        assert_eq!(d.minutes, 17);
-        assert_eq!(d.seconds, 59.0);
-        let d0 = DMS::new(71, 18, 50.0);
-        let d = d0 - 52_u32;
-        assert_eq!(d.degrees, 71);
-        assert_eq!(d.minutes, 17);
-        assert_eq!(d.seconds, 58.0);
-        let d0 = DMS::new(71, 1, 50.0);
-        let d = d0 - 50_u32;
-        assert_eq!(d.degrees, 71);
-        assert_eq!(d.minutes, 1);
-        assert_eq!(d.seconds, 0.0);
-        let d = d0 - 51_u32;
-        assert_eq!(d.degrees, 71);
-        assert_eq!(d.minutes, 0);
-        assert_eq!(d.seconds, 59.0);
-        let d0 = DMS::new(71, 0, 50.0);
-        let d = d0 - 51_u32;
-        assert_eq!(d.degrees, 70);
-        assert_eq!(d.minutes, 59);
-        assert_eq!(d.seconds, 59.0);
-    }
-    #[test]
-    fn test_mul_int() {
-        let d0 = DMS::new(101, 23, 16.0);
-        let d = d0 * 1_u32;
-        assert_eq!(d.degrees, 101);
-        assert_eq!(d.minutes, 23);
-        assert_eq!(d.seconds, 16.0);
-        let d0 = DMS::new(101, 23, 16.0);
-        let d = d0 * 2_u8;
-        assert_eq!(d.degrees, 202);
-        assert_eq!(d.minutes, 46);
+    fn test_to_ddeg() {
+        let d = DMS::new(3, 21, 25.255, Some(Cardinal::South));
+        assert_float_relative_eq!(d.to_ddeg_angle(), -3.3570127, 1E-6);
+
+        let d = DMS::new(43, 49, 54.114, Some(Cardinal::West));
+        assert_float_relative_eq!(d.to_ddeg_angle(), -43.83169, 1E-6);
     }
 }
