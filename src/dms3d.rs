@@ -30,6 +30,14 @@ pub struct DMS3d {
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("angle does not match a latitude")]
+    BadLatitude,
+    #[error("missing latitude definition")]
+    MissingLatitude,
+    #[error("angle does not match a longitude")]
+    BadLongitude,
+    #[error("missing longitude definition")]
+    MissingLongitude,
     #[error("failed to open file")]
     IoError(#[from] std::io::Error),
     #[error("GPX parsing error")]
@@ -101,12 +109,58 @@ impl std::ops::Add<DMS3d> for DMS3d {
 }
 impl DMS3d {
     /// Builds `3D D°M'S"` coordinates
-    pub fn new (latitude: DMS, longitude: DMS, altitude: Option<f64>) -> DMS3d {
-        DMS3d {
-            latitude: latitude,
-            longitude: longitude,
-            altitude: altitude,
+    pub fn new (latitude: DMS, longitude: DMS, altitude: Option<f64>) -> Result<DMS3d, Error> {
+        if let Some(c0) = latitude.cardinal {
+            if c0.is_latitude() {
+                if let Some(c1) = longitude.cardinal {
+                    if c1.is_longitude() {
+                        Ok(DMS3d {
+                            latitude: latitude,
+                            longitude: longitude,
+                            altitude: altitude,
+                        })
+                    } else {
+                        Err(Error::BadLongitude)
+                    }
+                } else {
+                    Err(Error::MissingLongitude)
+                }
+            } else {
+                Err(Error::BadLatitude)
+            }
+        } else {
+            Err(Error::MissingLatitude)
         }
+    }
+
+    /// Builds 3D DMS copy with given altitude attribute in `meters`,
+    /// if altitude data was already present, it gets overwritten
+    pub fn with_altitude (&self, altitude: f64) -> DMS3d {
+        DMS3d {
+            latitude: self.latitude,
+            longitude: self.longitude,
+            altitude: Some(altitude),
+        }
+    }
+
+    /// Same as [with_altitude] but quantity is expressed in `feet`
+    pub fn with_altitude_feet (&self, altitude: f64) -> DMS3d {
+        self.with_altitude(altitude / 3.28084)
+    }
+    
+    /// Adds given altitude quantity to self,
+    /// if altitude was not defined yet, it takes this value 
+    pub fn add_altitude (&mut self, altitude: f64) {
+        if let Some(a) = self.altitude {
+            self.altitude = Some(a + altitude)
+        } else {
+            self.altitude = Some(altitude)
+        }
+    }
+
+    /// Same as [add_altitude] but quantity is expressed in `feet`
+    pub fn add_altitude_feet (&mut self, altitude: f64) {
+        self.add_altitude(altitude / 3.28084)
     }
 
     /// Builds `3D D°M'S"` coordinates from given angles, expressed
