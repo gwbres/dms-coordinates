@@ -11,6 +11,7 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
+regex = "1"
 map_3d = "0.1.4" 
 rust-3d = "0.34.0"
 thiserror = "1"

@@ -1,6 +1,7 @@
 //! Angle representation in D°M'S" (sexagesimal format).
 //! Supports arithmetics operation, up to double precision,
 //! for easy navigation calculations.
+use regex::Regex;
 use thiserror::Error;
 use crate::cardinal::Cardinal;
 use serde_derive::{Serialize, Deserialize};
@@ -308,7 +309,7 @@ impl DMS {
     pub fn to_radians (&self) -> f64 {
         self.to_ddeg_angle() / 180.0 * std::f64::consts::PI 
     }
-    
+/*    
     /// Descriptor must follow standard formats:
     ///     +DDD.D  : sign + 3 digit "." + 1digit
     ///     Degrees specified, minutes = 0, seconds = 0
@@ -336,6 +337,7 @@ impl DMS {
                 degrees,
                 minutes: 0,
                 seconds: 0.0,
+                cardinal: Some(Cardinal::East),
             })
         } else if lon_negative_d.is_match(s) {
             let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
@@ -343,6 +345,7 @@ impl DMS {
                 degrees,
                 minutes: 0,
                 seconds: 0.0,
+                cardinal: Some(Cardinal::West),
             })
 
         } else if lon_positive_dm.is_match(s) {
@@ -351,6 +354,7 @@ impl DMS {
                 degrees,
                 minutes: 0,
                 seconds: 0.0,
+                cardinal: Some(Cardinal::East),
             })
 
         } else if lon_negative_dm.is_match(s) {
@@ -359,6 +363,7 @@ impl DMS {
                 degrees,
                 minutes: 0,
                 seconds: 0.0,
+                cardinal: Some(Cardinal::West),
             })
 
         } else if lon_positive_dms.is_match(s) {
@@ -367,6 +372,7 @@ impl DMS {
                 degrees,
                 minutes: 0,
                 seconds: 0.0,
+                cardinal: Some(Cardinal::East),
             })
 
         } else if lon_negative_dms.is_match(s) {
@@ -375,22 +381,28 @@ impl DMS {
                 degrees,
                 minutes: 0,
                 seconds: 0.0,
+                cardinal: Some(Cardinal::West),
             })
         
         } else {
             Err(ParseError::FormatNotRecognized)
         }
     }
+*/
     
     /// Returns D°M'S" angle copy with
-    /// WGS84 to EU50 conversion applied 
-    fn as_europe50_datum (&self) -> DMS {
-        if let Some(cardinal
+    /// WGS84 to EU50 conversion applied.
+    /// For conversion to be applied, we need a cardinal to be associated,
+    /// otherwise this simply returns a copy
+    pub fn to_europe50 (&self) -> Result<DMS, OpsError> {
+        if let Some(cardinal) = self.cardinal {
+            if cardinal.is_latitude() {
+                *self + DMS::new(0, 0, 3.6, Some(Cardinal::North))
+            } else {
+                *self + DMS::new(0, 0, 2.4, Some(Cardinal::East))
+            }
+        } else {
+            Ok(self.clone())
+        }
     }
-}
-
-/// `3D D°M'S" coordinates
-/// is the combination of two coordinates,
-/// latitude and longitude respectively, 
-/// and an optionnal altitude / depth
 }

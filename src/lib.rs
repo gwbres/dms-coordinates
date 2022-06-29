@@ -2,10 +2,12 @@
 //! mainly in navigation applications.   
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
 pub mod dms;
+pub mod dms3d;
 pub mod cardinal;
 
 pub use crate::{
     dms::DMS,
+    dms3d::DMS3d,
     cardinal::Cardinal,
 };
 

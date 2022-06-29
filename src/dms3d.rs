@@ -1,9 +1,9 @@
 //! 3D D°M'S" coordinates
-use regex::Regex;
 use thiserror::Error;
+use crate::{DMS, Cardinal, projected_distance};
+use crate::dms::OpsError;
 use initial_conditions::EARTH_RADIUS;
 use serde_derive::{Serialize, Deserialize};
-use crate::{DMS, Cardinal, projected_distance};
 
 #[derive(Error, Debug)]
 pub enum ParseError {
@@ -14,16 +14,16 @@ pub enum ParseError {
 }
 
 /// 3D D°M'S" coordinates, comprises
-/// a latitude: D°M'S" angle with cardinal (no longer an option),
-/// a longitude: D°M'S" angle with cardinal (no longer an option),
+/// a latitude: D°M'S" angle
+/// a longitude: D°M'S" angle
 /// and optionnal altitude
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS3d {
-    /// Latitude angle in D°M'S"
+    /// Latitude angle in D°M'S", cardinal is mandatory
     pub latitude: DMS,
-    /// Longitude angle in D°M'S"
-    pub longitude: DMS1d,
+    /// Longitude angle in D°M'S", cardinal is mandatory
+    pub longitude: DMS,
     /// Optionnal altitude / depth
     pub altitude: Option<f64>,
 }
@@ -48,6 +48,7 @@ impl std::fmt::Display for DMS3d {
 }
 
 impl Default for DMS3d {
+    /// Default DMS3D with null coordinates and null altitude
     fn default() -> Self {
         Self {
             latitude: DMS::from_ddeg_latitude(0.0_f64), 
@@ -57,6 +58,47 @@ impl Default for DMS3d {
     }
 }
 
+impl Into<(f64, f64)> for DMS3d {
+    /// Converts self to (latddeg, londdeg)
+    fn into (self) -> (f64, f64) {
+        (self.latitude.to_ddeg_angle(), self.longitude.to_ddeg_angle())
+    }
+}
+
+impl From<rust_3d::Point3D> for DMS3d {
+    /// Builds 3D D°M'S" coordinates from cartesian (ECEF) coordinates
+    fn from (item: rust_3d::Point3D) -> Self {
+        Self::from_cartesian(item)
+    }
+}
+
+impl std::ops::Add<DMS3d> for DMS3d {
+    type Output = Result<DMS3d, OpsError>;
+    fn add (self, rhs: Self) -> Result<Self, OpsError> {
+        if let Some(a0) = self.altitude {
+            if let Some(a1) = rhs.altitude {
+                Ok(DMS3d { 
+                    latitude : (self.latitude + rhs.latitude)?,
+                    longitude: (self.longitude + rhs.longitude)?, 
+                    altitude: Some(a1), 
+                })
+
+            } else {
+                Ok(DMS3d { 
+                    latitude : (self.latitude + rhs.latitude)?,
+                    longitude: (self.longitude + rhs.longitude)?, 
+                    altitude: Some(a0), 
+                })
+            }
+        } else {
+            Ok(DMS3d { 
+                latitude : (self.latitude + rhs.latitude)?,
+                longitude: (self.longitude + rhs.longitude)?, 
+                altitude: None, 
+            })
+        }
+    }
+}
 impl DMS3d {
     /// Builds `3D D°M'S"` coordinates
     pub fn new (latitude: DMS, longitude: DMS, altitude: Option<f64>) -> DMS3d {
@@ -156,49 +198,17 @@ impl DMS3d {
         }
     }
     
-    /// Converts Self to WGS84 European Datum,
-    /// Conversion is invalid if Self is not in WGS84 GPS.
-    pub fn into_europe_wgs84 (&self) -> DMS3d {
-        DMS3d {
-            latitude: self.latitude + DMS::new(0, 0, 3.6, Bearing::North),
-            longitude: self.longitude + DMS::new(0, 0, 2.4, Bearing::East),
+    /// Converts Self from WGS84 to EU50 Data
+    pub fn to_europe50 (&self) -> Result<DMS3d, OpsError> {
+        Ok(DMS3d {
+            latitude: self.latitude.to_europe50()?,
+            longitude: self.longitude.to_europe50()?,
             altitude: self.altitude,
-        }
-    }
-
-    /// Applies correction to convert from
-    /// WGS84 GPS to WGS84 EU. Do not use if Self is not in WGS84 GPS.
-    pub fn convert_to_europe_wgs84 (&mut self) {
-        self.latitude += DMS::new(0, 0, 3.6, Bearing::North);
-        self.longitude += DMS::new(0, 0, 2.4, Bearing::East);
+        })
     }
 }
 
 /*
-impl std::ops::Add for DMS3d {
-    type Output = DMS3d;
-    fn add (self, rhs: Self) -> Self {
-        let altitude : Option<f64> = match self.altitude {
-            Some(altitude) => {
-                match rhs.altitude {
-                    Some(a) => Some(altitude + a),
-                    None => Some(altitude),
-                }
-            },
-            None => {
-                match rhs.altitude {
-                    Some(a) => Some(a),
-                    None => None, 
-                }
-            },
-        };
-        DMS3d { 
-            latitude : self.latitude + rhs.latitude,
-            longitude: self.longitude + rhs.longitude, 
-            altitude: altitude, 
-        }
-    }
-}
 
 impl std::ops::Sub for DMS3d {
     type Output = DMS3d;
@@ -274,8 +284,3 @@ impl std::ops::Div for DMS3d {
         }
     }
 */
-impl From<rust_3d::Point3D> for DMS3d {
-    fn from (item: rust_3d::Point3D) -> Self {
-        Self::from_cartesian(item)
-    }
-}
