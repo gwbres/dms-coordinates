@@ -5,30 +5,6 @@ use initial_conditions::EARTH_RADIUS;
 use serde_derive::{Serialize, Deserialize};
 use crate::{DMS, Cardinal, projected_distance};
 
-pub struct DMS1d { 
-    /// Angle in D°M'S" format with fractionnal seconds, double precision
-    /// but modified wrapping behavior 
-    pub dms: DMS,
-    /// "N"/"S" Cardinal for a Latitude,
-    pub cardinal: Cardinal,
-}
-
-/// Latitude coordinates, with angle expressed in D°M'S" sexagesimal format
-/// Angle must be |D| < 90°
-pub type Latitude = DMS1d;
-
-/// Latitude coordinates, with angle expressed in D°M'S" sexagesimal format
-/// Angle must be |D| < 180°
-pub type Longitude = DMS1d;
-
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("expects one of \"N\", \"S\", \"E\", \"W\" cardinals")]
-    CardinalError,
-    #[error("degrees are out of expected |D°| < {0} range")]
-    DegreesRangeError(u8),
-}
-
 #[derive(Error, Debug)]
 pub enum ParseError {
     #[error("format is not recognized")]
@@ -37,154 +13,16 @@ pub enum ParseError {
     ParseIntError(#[from] std::num::ParseIntError),
 }
 
-impl Latitude {
-    /// Builds either Latitude or Longitude coordinates
-    /// from given values. Values should match predefined ranges
-    pub fn new (degrees: i8, minutes: u16, seconds: f64, cardinal: Cardinal) -> Result<DMS1d, Error> {
-        match cardinal {
-            Cardinal::North | Cardinal::South {
-                if angle.abs() < 90 {
-
-                }
-            },
-            _ => Err(Error::CardinalError)
-        }
-    }
-        if cardinal.is_latitude() {
-            if angle.abs() < 90 {
-                Ok(Self {
-                    dms : DMS {
-                        degrees: degrees,
-                        minutes: minutes,
-                        seconds: seconds,
-                    },
-                    cardinal,
-                })
-            } else {
-                Err(Error::DegreesRangeError(90))
-            }
-        } else if cardinal.is_longitude() {
-            if angle.abs() < 180 {
-                Ok(Self {
-                    dms: DMS {
-                        degrees: degrees,
-                        minutes: minutes,
-                        seconds: seconds,
-                    }
-                    cardinal,
-                })
-            } else {
-                Err(Error::DegreesRangeError(180))
-            }
-        } else {
-            Err(Error::CardinalError)
-        }
-    }
-
-    /// Builds Latitude coordinates from given angle in Decimal Degrees.
-    /// Angle must lie within predefined range.
-    pub fn from_latitude_ddeg (angle: f64) -> Result<DMS1d, Error> {
-        if angle.floor().abs() as u8 < 90 {
-        } else {
-            Err(Error::DegreesRangeError(90))
-        }
-    }
-    
-    /// Builds Longitude coordinates from given angle in Decimal Degrees.
-    /// Angle must lie within predefined range.
-    pub fn from_longitude_ddeg (angle: f64) -> Result<DMS1d, Error> {
-        if angle.floor().abs() as u8 < 180 {
-        } else {
-            Err(Error::DegreesRangeError(180))
-        }
-    }
-    
-    /// Parses Latitude or Longitude coordinates from given `str` descriptor.
-    /// Descriptor must follow standard formats:
-    ///     +DDD.D  : sign + 3 digit "." + 1digit
-    ///     Degrees specified, minutes = 0, seconds = 0
-    ///     +DDDMM.M : sign + 3 digit D° + 2 digit M' "." 1 digit M'
-    ///     Degrees + minutes specified
-    ///     +DDDMMSS.S : sign + 3 digit D° + 2 digit M' + fractionnal seconds
-    /// <!> Although standards says "+" is mandatory to describe positive D°,
-    /// this method tolerates a missing '+' and we interprate D° as positive value.
-    pub fn from_str (s: &str) -> Result<Self, ParseError> {
-        let lon_positive_d = Regex::new(r"^+\d{3}.\d{1}$")
-            .unwrap();
-        let lon_negative_d = Regex::new(r"^-\d{3}.\d{1}$")
-            .unwrap();
-        let lon_positive_dm = Regex::new(r"^+\d{3}d{2}.\d{1}$")
-            .unwrap();
-        let lon_negative_dm = Regex::new(r"^-\d{d}d{2}.\d{1}$")
-            .unwrap();
-        let lon_positive_dms = Regex::new(r"^+\d{3}d{2}d{2}.\d{1}$")
-            .unwrap();
-        let lon_negative_dms = Regex::new(r"^-\d{3}d{2}d{2}.\d{1}$")
-            .unwrap();
-        if lon_positive_d.is_match(s) {
-            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
-            Ok(DMS {
-                degrees,
-                minutes: 0,
-                seconds: 0.0,
-            })
-        } else if lon_negative_d.is_match(s) {
-            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
-            Ok(DMS {
-                degrees,
-                minutes: 0,
-                seconds: 0.0,
-            })
-
-        } else if lon_positive_dm.is_match(s) {
-            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
-            Ok(DMS {
-                degrees,
-                minutes: 0,
-                seconds: 0.0,
-            })
-
-        } else if lon_negative_dm.is_match(s) {
-            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
-            Ok(DMS {
-                degrees,
-                minutes: 0,
-                seconds: 0.0,
-            })
-
-        } else if lon_positive_dms.is_match(s) {
-            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
-            Ok(DMS {
-                degrees,
-                minutes: 0,
-                seconds: 0.0,
-            })
-
-        } else if lon_negative_dms.is_match(s) {
-            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
-            Ok(DMS {
-                degrees,
-                minutes: 0,
-                seconds: 0.0,
-            })
-        
-        } else {
-            Err(ParseError::FormatNotRecognized)
-        }
-    }
-    
-}
-
-/// `3D D°M'S" coordinates
-/// is the combination of two coordinates,
-/// latitude and longitude respectively, 
-/// and an optionnal altitude / depth
+/// 3D D°M'S" coordinates, comprises
+/// a latitude: D°M'S" angle with cardinal (no longer an option),
+/// a longitude: D°M'S" angle with cardinal (no longer an option),
+/// and optionnal altitude
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct DMS3d {
-    /// Latitude as DMS1d object
-    pub latitude: DMS1d,
-    /// Longitude as DMS1d object
+    /// Latitude angle in D°M'S"
+    pub latitude: DMS,
+    /// Longitude angle in D°M'S"
     pub longitude: DMS1d,
     /// Optionnal altitude / depth
     pub altitude: Option<f64>,
@@ -228,12 +66,13 @@ impl DMS3d {
             altitude: altitude,
         }
     }
+
     /// Builds `3D D°M'S"` coordinates from given angles, expressed
     /// in decimal degrees, and an optionnal altitude.
     pub fn from_ddeg_angles (latitude: f64, longitude: f64, altitude: Option<f64>) -> DMS3d {
         DMS3d {
-            latitude: DMS::from_ddeg_latitude(latitude),
-            longitude: DMS::from_ddeg_longitude(longitude),
+            latitude: DMS::from_ddeg_angle(latitude),
+            longitude: DMS::from_ddeg_angle(longitude),
             altitude: altitude
         }
     }
@@ -257,7 +96,7 @@ impl DMS3d {
 
     /// Returns azimuth angle ɑ, where 0 <= ɑ < 360, 
     /// between Self & other 3D D°M'S" coordinates. 
-    /// ɑ, being the angle between North Pole & `rhs` coordinates.
+    /// ɑ, being the angle between North Pole & `rhs` coordinates
     pub fn azimuth (&self, rhs: Self) -> f64 {
         let (phi1, phi2) = (map_3d::deg2rad(self.latitude.to_ddeg_angle()),
             map_3d::deg2rad(rhs.latitude.to_ddeg_angle()));
@@ -316,7 +155,7 @@ impl DMS3d {
             Err(_) => Err(Error::GpxParsingError)
         }
     }
-/*
+    
     /// Converts Self to WGS84 European Datum,
     /// Conversion is invalid if Self is not in WGS84 GPS.
     pub fn into_europe_wgs84 (&self) -> DMS3d {
@@ -332,7 +171,7 @@ impl DMS3d {
     pub fn convert_to_europe_wgs84 (&mut self) {
         self.latitude += DMS::new(0, 0, 3.6, Bearing::North);
         self.longitude += DMS::new(0, 0, 2.4, Bearing::East);
-    } */
+    }
 }
 
 /*

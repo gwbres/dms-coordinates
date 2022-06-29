@@ -308,4 +308,89 @@ impl DMS {
     pub fn to_radians (&self) -> f64 {
         self.to_ddeg_angle() / 180.0 * std::f64::consts::PI 
     }
+    
+    /// Descriptor must follow standard formats:
+    ///     +DDD.D  : sign + 3 digit "." + 1digit
+    ///     Degrees specified, minutes = 0, seconds = 0
+    ///     +DDDMM.M : sign + 3 digit D° + 2 digit M' "." 1 digit M'
+    ///     Degrees + minutes specified
+    ///     +DDDMMSS.S : sign + 3 digit D° + 2 digit M' + fractionnal seconds
+    /// <!> Although standards says "+" is mandatory to describe positive D°,
+    /// this method tolerates a missing '+' and we interprate D° as positive value.
+    pub fn from_str (s: &str) -> Result<Self, ParseError> {
+        let lon_positive_d = Regex::new(r"^+\d{3}.\d{1}$")
+            .unwrap();
+        let lon_negative_d = Regex::new(r"^-\d{3}.\d{1}$")
+            .unwrap();
+        let lon_positive_dm = Regex::new(r"^+\d{3}d{2}.\d{1}$")
+            .unwrap();
+        let lon_negative_dm = Regex::new(r"^-\d{d}d{2}.\d{1}$")
+            .unwrap();
+        let lon_positive_dms = Regex::new(r"^+\d{3}d{2}d{2}.\d{1}$")
+            .unwrap();
+        let lon_negative_dms = Regex::new(r"^-\d{3}d{2}d{2}.\d{1}$")
+            .unwrap();
+        if lon_positive_d.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+        } else if lon_negative_d.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_positive_dm.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_negative_dm.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_positive_dms.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+
+        } else if lon_negative_dms.is_match(s) {
+            let degrees = u16::from_str_radix(&s[0..3], 10)?; //attention au '+'
+            Ok(DMS {
+                degrees,
+                minutes: 0,
+                seconds: 0.0,
+            })
+        
+        } else {
+            Err(ParseError::FormatNotRecognized)
+        }
+    }
+    
+    /// Returns D°M'S" angle copy with
+    /// WGS84 to EU50 conversion applied 
+    fn as_europe50_datum (&self) -> DMS {
+        if let Some(cardinal
+    }
+}
+
+/// `3D D°M'S" coordinates
+/// is the combination of two coordinates,
+/// latitude and longitude respectively, 
+/// and an optionnal altitude / depth
 }
