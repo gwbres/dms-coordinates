@@ -1,5 +1,3 @@
-name: Rust
-
 on:
   push:
     branches: [ main ]
@@ -11,9 +9,29 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Coverage 
+      run: |
+        cargo install cargo-tarpaulin
+        cargo tarpaulin
 
+  build-ws:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+  
+  build-mac:
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
     - name: Build
