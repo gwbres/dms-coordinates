@@ -3,6 +3,32 @@ use dms_coordinates::cardinal::Cardinal;
 mod tests {
     use super::*;
     #[test]
+    fn test_default() {
+        assert_eq!(Cardinal::default(), Cardinal::North)
+    }
+    #[test]
+    fn test_lat_lon() {
+        assert_eq!(Cardinal::North.is_latitude(), true);
+        assert_eq!(Cardinal::South.is_latitude(), true);
+        assert_eq!(Cardinal::East.is_latitude(), false);
+        assert_eq!(Cardinal::North.is_longitude(), false);
+        assert_eq!(Cardinal::East.is_longitude(), true);
+        assert_eq!(Cardinal::West.is_longitude(), true);
+        assert_eq!(Cardinal::North.same_kind(Cardinal::South), true);
+        assert_eq!(Cardinal::South.same_kind(Cardinal::SouthWest), false);
+    }
+    #[test]
+    fn test_to_string() {
+        assert_eq!(Cardinal::North.to_string(), "N");
+        assert_eq!(Cardinal::NorthEast.to_string(), "NE");
+        assert_eq!(Cardinal::East.to_string(), "E");
+        assert_eq!(Cardinal::SouthEast.to_string(), "SE");
+        assert_eq!(Cardinal::South.to_string(), "S");
+        assert_eq!(Cardinal::SouthWest.to_string(), "SW");
+        assert_eq!(Cardinal::West.to_string(), "W");
+        assert_eq!(Cardinal::NorthWest.to_string(), "NW");
+    }
+    #[test]
     fn is_northern() {
         assert_eq!(Cardinal::North.is_northern(), true);
         assert_eq!(Cardinal::NorthEast.is_northern(), true);

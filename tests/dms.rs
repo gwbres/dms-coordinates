@@ -23,6 +23,13 @@ mod dms {
         assert!((29.495 - dms.seconds).abs() < 1E-6);
     }
     #[test]
+    fn test_to_string() {
+        assert_eq!(DMS::new(35, 39, 10.0, None).to_string(),
+            "35°39'10\"");
+        assert_eq!(DMS::new(39, 40, 43.0, Some(Cardinal::SouthWest)).to_string(),
+            "39°40'43\"SW");
+    }
+    #[test]
     fn wrapping_constructor() {
         let dms = DMS::new(91, 59, 61.0, None);
         assert_eq!(dms.degrees, 92);
