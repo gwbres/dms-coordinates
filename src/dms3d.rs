@@ -167,8 +167,27 @@ impl DMS3d {
     /// in decimal degrees, and an optionnal altitude.
     pub fn from_ddeg_angles (latitude: f64, longitude: f64, altitude: Option<f64>) -> DMS3d {
         DMS3d {
-            latitude: DMS::from_ddeg_angle(latitude),
-            longitude: DMS::from_ddeg_angle(longitude),
+            latitude: {
+                let dms = DMS::from_ddeg_angle(latitude);
+                if latitude < 0.0 {
+                    dms
+                        .with_cardinal(Cardinal::South)
+                } else {
+                    dms
+                        .with_cardinal(Cardinal::North)
+                }
+            },
+            longitude: {
+                let dms = DMS::from_ddeg_angle(longitude);
+                if longitude < 0.0 {
+                    dms
+                        .with_cardinal(Cardinal::West)
+                } else {
+                    dms
+                        .with_cardinal(Cardinal::East)
+
+                }
+            },
             altitude: altitude
         }
     }
