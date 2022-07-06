@@ -10,6 +10,9 @@ categories = ["science",]
 edition = "2018"
 readme = "README.md"
 
+[features]
+use-serde = ["serde"]
+
 [dependencies]
 regex = "1"
 map_3d = "0.1.4" 
@@ -17,10 +20,9 @@ rust-3d = "0.34.0"
 thiserror = "1"
 geo-types = "0.7.2"
 gpx = "0.8.1"
-serde = "1"
-serde_derive = "1"
 initial_conditions = "0.4.0"
 num-integer = "0.1.45"
+serde = { version = "1.0.138", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 assert_float_eq = "1.1.3"

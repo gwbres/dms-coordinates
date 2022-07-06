@@ -1,10 +1,8 @@
 //! Angle representation in D°M'S" (sexagesimal format).
 //! Supports arithmetics operation, up to double precision,
 //! for easy navigation calculations.
-use regex::Regex;
 use thiserror::Error;
 use crate::cardinal::Cardinal;
-use serde_derive::{Serialize, Deserialize};
 
 /// Angle expressed as `D°M'S"`, 
 /// in Degrees D°, Minutes M' and fractionnal
@@ -13,7 +11,7 @@ use serde_derive::{Serialize, Deserialize};
 /// we consider this angle represents either a Latitude
 /// or a Longitude angle.
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "use-serde", derive(Serialize, Deserialize))]
 pub struct DMS {
     /// Degrees D° 
     pub degrees: u16,
@@ -32,7 +30,7 @@ pub enum OpsError {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "use-serde", derive(Serialize, Deserialize))]
 pub enum Scale {
     /// Countries scale is 1°0'0"
     Country,

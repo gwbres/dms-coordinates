@@ -1,9 +1,8 @@
 //! Cardinal points, only integer angles (N, NE, E, ..) are supported
-use serde_derive::{Serialize, Deserialize};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
-#[derive(Serialize, Deserialize)]
 #[repr(u16)]
+#[cfg_attr(feature = "use-serde", derive(Serialize, Deserialize))]
 pub enum Cardinal {
     /// Northern Cardinal
     North = 0,

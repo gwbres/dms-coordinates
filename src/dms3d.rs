@@ -3,7 +3,6 @@ use thiserror::Error;
 use crate::{DMS, Cardinal, projected_distance};
 use crate::dms::OpsError;
 use initial_conditions::EARTH_RADIUS;
-use serde_derive::{Serialize, Deserialize};
 
 #[derive(Error, Debug)]
 pub enum ParseError {
@@ -18,7 +17,7 @@ pub enum ParseError {
 /// a longitude: D°M'S" angle
 /// and optionnal altitude
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "use-serde", derive(Serialize, Deserialize))]
 pub struct DMS3d {
     /// Latitude angle in D°M'S", cardinal is mandatory
     pub latitude: DMS,
