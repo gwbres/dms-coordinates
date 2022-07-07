@@ -2,7 +2,7 @@
 use thiserror::Error;
 use crate::{DMS, Cardinal, projected_distance};
 use crate::dms::OpsError;
-use initial_conditions::EARTH_RADIUS;
+use crate::EARTH_RADIUS;
 
 #[derive(Error, Debug)]
 pub enum ParseError {

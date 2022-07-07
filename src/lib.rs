@@ -11,7 +11,8 @@ pub use crate::{
     cardinal::Cardinal,
 };
 
-use initial_conditions::EARTH_RADIUS;
+/// Mean radius of the Earth: 6.37 * 10^(6) m
+const EARTH_RADIUS: f64 = 6.37e6_f64;
 
 /// Returns distance (m) between two decimal degrees coordinates
 /// coord1: (lat,lon), coord2: (lat, lon)
