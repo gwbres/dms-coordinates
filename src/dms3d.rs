@@ -41,6 +41,7 @@ pub enum Error {
     IoError(#[from] std::io::Error),
     #[error("GPX parsing error")]
     GpxParsingError,
+    #[cfg(feature = "with-gpx")]
     #[error("failed to write GPX")]
     GpxWritingError(#[from] gpx::errors::GpxError),
 }
@@ -236,6 +237,7 @@ impl DMS3d {
     
     /// Writes self into given file in GPX format.  
     /// Resulting GPX file contains a single waypoint route.
+    #[cfg(feature = "with-gpx")]
     pub fn to_gpx (&self, fp: &str) -> Result<(), gpx::errors::GpxError> {
         let mut gpx : gpx::Gpx = Default::default();
         gpx.version = gpx::GpxVersion::Gpx11;
@@ -251,6 +253,7 @@ impl DMS3d {
     /// Builds 3D D°M'S" coordinates from a GPX file,
     /// which must either contain a single waypoint,
     /// otherwise we use the 1st waypoint encountered in the route.
+    #[cfg(feature = "with-gpx")]
     pub fn from_gpx (fp: &str) -> Result<Option<DMS3d>, Error> {
         let fd = std::fs::File::open(fp)?;
         let content: Result<gpx::Gpx, gpx::errors::GpxError> = gpx::read(fd);

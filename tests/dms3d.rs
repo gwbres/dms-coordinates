@@ -84,6 +84,7 @@ mod dms3d {
         assert!((cartesian.z/1000.0 - xyz.z/1000.0).abs() < 50.0);
     }
     #[test]
+    #[cfg(feature = "with-gpx")]
     fn test_to_gpx() {
         let dms = DMS3d::from_ddeg_angles(
             40.730610_f64, // NY
