@@ -131,12 +131,11 @@ impl Into<u8> for DMS {
 
 impl std::ops::Add<DMS> for DMS {
     type Output = Result<Self, OpsError>;
-    /// Adds `D°M'S"` coordinates together
     fn add (self, rhs: Self) -> Result<Self, OpsError> {
         if let Some(c0) = self.cardinal {
             if let Some(c1) = rhs.cardinal {
                 let a = self.to_ddeg_angle()
-                    + self.to_ddeg_angle();
+                    + rhs.to_ddeg_angle();
                 if c0.is_latitude() && c1.is_latitude() {
                     Ok(Self::from_ddeg_latitude(a))
                 } else if c0.is_longitude() && c1.is_longitude() {
@@ -155,10 +154,47 @@ impl std::ops::Add<DMS> for DMS {
     }
 }
 
+impl std::ops::AddAssign<DMS> for DMS {
+    fn add_assign (&mut self, rhs: Self) {
+        if let Some(c0) = self.cardinal {
+            if let Some(c1) = rhs.cardinal {
+                let a = self.to_ddeg_angle()
+                    + rhs.to_ddeg_angle();
+                if c0.is_latitude() && c1.is_latitude() {
+                    *self = Self::from_ddeg_latitude(a)
+                } else if c0.is_longitude() && c1.is_longitude() {
+                    *self = Self::from_ddeg_longitude(a)
+                }
+            } else {
+                *self = Self::from_seconds(
+                    self.total_seconds()
+                    + rhs.total_seconds())
+            }
+        } else {
+            *self = Self::from_seconds(
+                self.total_seconds()
+                + rhs.total_seconds())
+        }
+    }
+}
+
+impl std::ops::AddAssign<f64> for DMS {
+    fn add_assign (&mut self, rhs: f64) {
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() + rhs;
+            if cardinal.is_latitude() {
+                *self = Self::from_ddeg_latitude(a)
+            } else {
+                *self = Self::from_ddeg_longitude(a)
+            }
+        } else {
+            *self = Self::from_seconds(self.total_seconds() + rhs)
+        }
+    }
+}
+
 impl std::ops::Add<f64> for DMS {
     type Output = Self;
-    /// Adds `rhs` decimal degrees if we have a cardinal,
-    /// otherwise adds fractionnal seconds to Self
     fn add (self, rhs: f64) -> Self { 
         if let Some(cardinal) = self.cardinal {
             let a = self.to_ddeg_angle() + rhs;
@@ -169,6 +205,99 @@ impl std::ops::Add<f64> for DMS {
             }
         } else {
             Self::from_seconds(self.total_seconds() + rhs)
+        }
+    }
+}
+
+impl std::ops::Sub<f64> for DMS {
+    type Output = Self;
+    fn sub (self, rhs: f64) -> Self { 
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() - rhs;
+            if cardinal.is_latitude() {
+                Self::from_ddeg_latitude(a)
+            } else {
+                Self::from_ddeg_longitude(a)
+            }
+        } else {
+            Self::from_seconds(self.total_seconds() - rhs)
+        }
+    }
+}
+
+impl std::ops::SubAssign<f64> for DMS {
+    fn sub_assign (&mut self, rhs: f64) { 
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() - rhs;
+            if cardinal.is_latitude() {
+                *self = Self::from_ddeg_latitude(a)
+            } else {
+                *self = Self::from_ddeg_longitude(a)
+            }
+        } else {
+            *self = Self::from_seconds(self.total_seconds() - rhs)
+        }
+    }
+}
+
+impl std::ops::Mul<f64> for DMS {
+    type Output = DMS;
+    fn mul (self, rhs: f64) -> DMS {
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() * rhs;
+            if cardinal.is_latitude() {
+                Self::from_ddeg_latitude(a)
+            } else {
+                Self::from_ddeg_longitude(a)
+            }
+        } else {
+            Self::from_seconds(self.total_seconds() * rhs)
+        }
+    }
+}
+
+impl std::ops::Div<f64> for DMS {
+    type Output = DMS;
+    fn div (self, rhs: f64) -> DMS {
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() / rhs;
+            if cardinal.is_latitude() {
+                Self::from_ddeg_latitude(a)
+            } else {
+                Self::from_ddeg_longitude(a)
+            }
+        } else {
+            Self::from_seconds(self.total_seconds() / rhs)
+        }
+    }
+}
+
+impl std::ops::MulAssign<f64> for DMS {
+    fn mul_assign (&mut self, rhs: f64) {
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() * rhs;
+            if cardinal.is_latitude() {
+                *self = Self::from_ddeg_latitude(a)
+            } else {
+                *self = Self::from_ddeg_longitude(a)
+            }
+        } else {
+            *self = Self::from_seconds(self.total_seconds() * rhs)
+        }
+    }
+}
+
+impl std::ops::DivAssign<f64> for DMS {
+    fn div_assign (&mut self, rhs: f64) {
+        if let Some(cardinal) = self.cardinal {
+            let a = self.to_ddeg_angle() / rhs;
+            if cardinal.is_latitude() {
+                *self = Self::from_ddeg_latitude(a)
+            } else {
+                *self = Self::from_ddeg_longitude(a)
+            }
+        } else {
+            *self = Self::from_seconds(self.total_seconds() / rhs)
         }
     }
 }
