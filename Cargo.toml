@@ -12,7 +12,7 @@ readme = "README.md"
 
 [features]
 with-gpx = ["gpx"]
-use-serde = ["serde"]
+with-serde = ["serde"]
 
 [dependencies]
 regex = "1"
