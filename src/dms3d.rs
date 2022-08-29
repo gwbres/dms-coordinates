@@ -4,8 +4,8 @@ use crate::{DMS, Cardinal, projected_distance};
 use crate::dms::OpsError;
 use crate::EARTH_RADIUS;
 
-#[cfg(feature = "with-serde")]
-use serde::{Serialize, Deserialize};
+#[cfg(feature = "serde")]
+use serde_derive::{Serialize, Deserialize};
 
 #[derive(Error, Debug)]
 pub enum ParseError {
@@ -20,7 +20,7 @@ pub enum ParseError {
 /// a longitude: D°M'S" angle
 /// and optionnal altitude
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DMS3d {
     /// Latitude angle in D°M'S", cardinal is mandatory
     pub latitude: DMS,
@@ -44,7 +44,7 @@ pub enum Error {
     IoError(#[from] std::io::Error),
     #[error("GPX parsing error")]
     GpxParsingError,
-    #[cfg(feature = "with-gpx")]
+    #[cfg(feature = "gpx")]
     #[error("failed to write GPX")]
     GpxWritingError(#[from] gpx::errors::GpxError),
 }
@@ -240,7 +240,7 @@ impl DMS3d {
     
     /// Writes self into given file in GPX format.  
     /// Resulting GPX file contains a single waypoint route.
-    #[cfg(feature = "with-gpx")]
+    #[cfg(feature = "gpx")]
     pub fn to_gpx (&self, fp: &str) -> Result<(), gpx::errors::GpxError> {
         let mut gpx : gpx::Gpx = Default::default();
         gpx.version = gpx::GpxVersion::Gpx11;
@@ -256,7 +256,7 @@ impl DMS3d {
     /// Builds 3D D°M'S" coordinates from a GPX file,
     /// which must either contain a single waypoint,
     /// otherwise we use the 1st waypoint encountered in the route.
-    #[cfg(feature = "with-gpx")]
+    #[cfg(feature = "gpx")]
     pub fn from_gpx (fp: &str) -> Result<Option<DMS3d>, Error> {
         let fd = std::fs::File::open(fp)?;
         let content: Result<gpx::Gpx, gpx::errors::GpxError> = gpx::read(fd);

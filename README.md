@@ -17,3 +17,8 @@ so called "sexagesimal" format, with an optionnal Cardinal. This object
 can be used to represent Latitude / Longitude angles
 * [DMS 3D](doc/dms3d.md) comprises a Latitude, a Longitude angle and optionnal altitude
 (3D coordinates)
+
+## Features
+
+* serde: enable `DMS`, `DMS3d`, `Cardinal` serdes ops
+* gpx: enable `DMS3d::from_gpx` and `DMS3d::to_gpx`

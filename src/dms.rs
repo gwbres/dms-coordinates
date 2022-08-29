@@ -4,8 +4,8 @@
 use thiserror::Error;
 use crate::cardinal::Cardinal;
 
-#[cfg(feature = "with-serde")]
-use serde::{Serialize, Deserialize};
+#[cfg(feature = "serde")]
+use serde_derive::{Serialize, Deserialize};
 
 /// Angle expressed as `D°M'S"`, 
 /// in Degrees D°, Minutes M' and fractionnal
@@ -14,7 +14,7 @@ use serde::{Serialize, Deserialize};
 /// we consider this angle represents either a Latitude
 /// or a Longitude angle.
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DMS {
     /// Degrees D° 
     pub degrees: u16,
@@ -33,7 +33,7 @@ pub enum OpsError {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Scale {
     /// Countries scale is 1°0'0"
     Country,
