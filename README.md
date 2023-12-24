@@ -1,6 +1,6 @@
 # DMS Coordinates 
 
-[![Rust](https://github.com/gwbres/dms-coordinates/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/gwbres/dms-coordinates/actions/workflows/rust.yml)
+[![Rust](https://github.com/gwbres/dms-coordinates/actions/workflows/rust.yml/badge.svg)](https://github.com/gwbres/dms-coordinates/actions/workflows/rust.yml)
 [![crates.io](https://docs.rs/dms-coordinates/badge.svg)](https://docs.rs/dms-coordinates/badge.svg)
 [![crates.io](https://img.shields.io/crates/d/dms-coordinates.svg)](https://crates.io/crates/dms-coordinates)   
 [![crates.io](https://img.shields.io/crates/v/dms-coordinates.svg)](https://crates.io/crates/dms-coordinates)
