@@ -100,13 +100,13 @@ mod tests {
     }
     #[test]
     fn test_add_ops() {
-        assert_eq!(Cardinal::North +90, Cardinal::East);
-        assert_eq!(Cardinal::North +180, Cardinal::South);
-        assert_eq!(Cardinal::East +180, Cardinal::West);
-        assert_eq!(Cardinal::East +90, Cardinal::South);
-        assert_eq!(Cardinal::NorthEast +315, Cardinal::North);
-        assert_eq!(Cardinal::NorthEast +225, Cardinal::West);
-        assert_eq!(Cardinal::North + 360 +180, Cardinal::South);
-        assert_eq!(Cardinal::NorthEast + 360 +180, Cardinal::SouthWest);
+        assert_eq!(Cardinal::North + 90, Cardinal::East);
+        assert_eq!(Cardinal::North + 180, Cardinal::South);
+        assert_eq!(Cardinal::East + 180, Cardinal::West);
+        assert_eq!(Cardinal::East + 90, Cardinal::South);
+        assert_eq!(Cardinal::NorthEast + 315, Cardinal::North);
+        assert_eq!(Cardinal::NorthEast + 225, Cardinal::West);
+        assert_eq!(Cardinal::North + 360 + 180, Cardinal::South);
+        assert_eq!(Cardinal::NorthEast + 360 + 180, Cardinal::SouthWest);
     }
 }
