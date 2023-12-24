@@ -1,4 +1,4 @@
-use dms_coordinates::{Cardinal, DMS3d, DMS};
+use dms_coordinates::{Cardinal, DMS3d};
 
 #[cfg(test)]
 mod dms3d {

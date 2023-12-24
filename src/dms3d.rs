@@ -72,12 +72,12 @@ impl Default for DMS3d {
     }
 }
 
-impl Into<(f64, f64)> for DMS3d {
+impl From<DMS3d> for (f64, f64) {
     /// Converts self to (latddeg, londdeg)
-    fn into(self) -> (f64, f64) {
+    fn from(val: DMS3d) -> Self {
         (
-            self.latitude.to_ddeg_angle(),
-            self.longitude.to_ddeg_angle(),
+            val.latitude.to_ddeg_angle(),
+            val.longitude.to_ddeg_angle(),
         )
     }
 }
@@ -123,9 +123,9 @@ impl DMS3d {
                 if let Some(c1) = longitude.cardinal {
                     if c1.is_longitude() {
                         Ok(DMS3d {
-                            latitude: latitude,
-                            longitude: longitude,
-                            altitude: altitude,
+                            latitude,
+                            longitude,
+                            altitude,
                         })
                     } else {
                         Err(Error::BadLongitude)
@@ -191,7 +191,7 @@ impl DMS3d {
                     dms.with_cardinal(Cardinal::East)
                 }
             },
-            altitude: altitude,
+            altitude,
         }
     }
 

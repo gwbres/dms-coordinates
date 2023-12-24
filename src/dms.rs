@@ -81,49 +81,49 @@ impl Default for DMS {
     }
 }
 
-impl Into<f64> for DMS {
+impl From<DMS> for f64 {
     /// Converts Self to decimal degrees
-    fn into(self) -> f64 {
-        self.to_ddeg_angle()
+    fn from(val: DMS) -> Self {
+        val.to_ddeg_angle()
     }
 }
 
-impl Into<f32> for DMS {
+impl From<DMS> for f32 {
     /// Converts Self into fractionnal seconds with precision loss
-    fn into(self) -> f32 {
-        self.to_ddeg_angle() as f32
+    fn from(val: DMS) -> Self {
+        val.to_ddeg_angle() as f32
     }
 }
 
-impl Into<u64> for DMS {
+impl From<DMS> for u64 {
     /// Returns total amount of seconds in Self,
     /// loosing fractionnal part
-    fn into(self) -> u64 {
-        self.total_seconds().floor() as u64
+    fn from(val: DMS) -> Self {
+        val.total_seconds().floor() as u64
     }
 }
 
-impl Into<u32> for DMS {
+impl From<DMS> for u32 {
     /// Returns total amount of seconds in Self,
     /// loosing fractionnal part
-    fn into(self) -> u32 {
-        self.total_seconds().floor() as u32
+    fn from(val: DMS) -> Self {
+        val.total_seconds().floor() as u32
     }
 }
 
-impl Into<u16> for DMS {
+impl From<DMS> for u16 {
     /// Returns total amount of seconds in Self,
     /// loosing fractionnal part
-    fn into(self) -> u16 {
-        self.total_seconds().floor() as u16
+    fn from(val: DMS) -> Self {
+        val.total_seconds().floor() as u16
     }
 }
 
-impl Into<u8> for DMS {
+impl From<DMS> for u8 {
     /// Returns total amount of seconds in Self,
     /// loosing fractionnal part
-    fn into(self) -> u8 {
-        self.total_seconds().floor() as u8
+    fn from(val: DMS) -> Self {
+        val.total_seconds().floor() as u8
     }
 }
 
@@ -390,7 +390,7 @@ impl DMS {
     /// If no cardinal is associated, returned angle strictly > 0.
     pub fn to_ddeg_angle(&self) -> f64 {
         let d =
-            self.degrees as f64 + self.minutes as f64 / 60.0_f64 + self.seconds as f64 / 3600.0_f64;
+            self.degrees as f64 + self.minutes as f64 / 60.0_f64 + self.seconds / 3600.0_f64;
         match self.cardinal {
             Some(cardinal) => {
                 if cardinal.is_southern() || cardinal.is_western() {
@@ -515,7 +515,7 @@ impl DMS {
                 *self + DMS::new(0, 0, 2.4, Some(Cardinal::East))
             }
         } else {
-            Ok(self.clone())
+            Ok(*self)
         }
     }
 }
