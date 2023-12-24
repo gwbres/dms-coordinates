@@ -7,6 +7,7 @@ description = "Package to handle D°M'S'' coordinates"
 homepage = "https://github.com/gwbres/dms-coordinates"
 keywords = ["positionning", ]
 categories = ["science",]
+repository = "https://github.com/gwbres/dms-coordinates"
 edition = "2018"
 readme = "README.md"
 
