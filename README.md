@@ -20,8 +20,9 @@ can be used to represent Latitude / Longitude angles
 
 ## Features
 
-* serde: enable `DMS`, `DMS3d`, `Cardinal` serdes ops
-* gpx: enable `DMS3d::from_gpx` and `DMS3d::to_gpx`
+* std: this lib supports "no-std" by default
+* serde: enable `DMS`, `DMS3d`, `Cardinal` serdes ops, requires "std"
+* gpx: enables cast from Waypoint to DMS3D, requires "std"
 
 ## Other solutions :crab:
 

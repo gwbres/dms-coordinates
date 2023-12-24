@@ -25,7 +25,7 @@ pub enum Cardinal {
     NorthWest = 315,
 }
 
-impl std::ops::Add<u16> for Cardinal {
+impl core::ops::Add<u16> for Cardinal {
     type Output = Cardinal;
     /// Adds given angle (°) to Self
     fn add(self, rhs: u16) -> Self {
@@ -40,8 +40,8 @@ impl Default for Cardinal {
     }
 }
 
-impl std::fmt::Display for Cardinal {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for Cardinal {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Cardinal::North => write!(f, "N"),
             Cardinal::NorthEast => write!(f, "NE"),

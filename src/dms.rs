@@ -1,8 +1,7 @@
 //! Angle representation in D°M'S" (sexagesimal format).
 //! Supports arithmetics operation, up to double precision,
 //! for easy navigation calculations.
-use crate::cardinal::Cardinal;
-use thiserror::Error;
+use crate::{cardinal::Cardinal, Error};
 
 #[cfg(feature = "serde")]
 use serde_derive::{Deserialize, Serialize};
@@ -24,12 +23,6 @@ pub struct DMS {
     pub seconds: f64,
     /// Optionnal cardinal associated to this angle
     pub cardinal: Option<Cardinal>,
-}
-
-#[derive(Error, Debug)]
-pub enum OpsError {
-    #[error("incompatible cardinals")]
-    IncompatibleCardinals,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -55,8 +48,8 @@ pub enum Scale {
     PreciseSurveying,
 }
 
-impl std::fmt::Display for DMS {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for DMS {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         if let Some(cardinal) = self.cardinal {
             write!(
                 f,
@@ -127,9 +120,9 @@ impl From<DMS> for u8 {
     }
 }
 
-impl std::ops::Add<DMS> for DMS {
-    type Output = Result<Self, OpsError>;
-    fn add(self, rhs: Self) -> Result<Self, OpsError> {
+impl core::ops::Add<DMS> for DMS {
+    type Output = Result<Self, Error>;
+    fn add(self, rhs: Self) -> Result<Self, Error> {
         if let Some(c0) = self.cardinal {
             if let Some(c1) = rhs.cardinal {
                 let a = self.to_ddeg_angle() + rhs.to_ddeg_angle();
@@ -138,7 +131,7 @@ impl std::ops::Add<DMS> for DMS {
                 } else if c0.is_longitude() && c1.is_longitude() {
                     Ok(Self::from_ddeg_longitude(a))
                 } else {
-                    Err(OpsError::IncompatibleCardinals)
+                    Err(Error::IncompatibleCardinals)
                 }
             } else {
                 Ok(Self::from_seconds(
@@ -153,7 +146,7 @@ impl std::ops::Add<DMS> for DMS {
     }
 }
 
-impl std::ops::AddAssign<DMS> for DMS {
+impl core::ops::AddAssign<DMS> for DMS {
     fn add_assign(&mut self, rhs: Self) {
         if let Some(c0) = self.cardinal {
             if let Some(c1) = rhs.cardinal {
@@ -172,7 +165,7 @@ impl std::ops::AddAssign<DMS> for DMS {
     }
 }
 
-impl std::ops::AddAssign<f64> for DMS {
+impl core::ops::AddAssign<f64> for DMS {
     fn add_assign(&mut self, rhs: f64) {
         if let Some(cardinal) = self.cardinal {
             let a = self.to_ddeg_angle() + rhs;
@@ -187,7 +180,7 @@ impl std::ops::AddAssign<f64> for DMS {
     }
 }
 
-impl std::ops::Add<f64> for DMS {
+impl core::ops::Add<f64> for DMS {
     type Output = Self;
     fn add(self, rhs: f64) -> Self {
         if let Some(cardinal) = self.cardinal {
@@ -203,7 +196,7 @@ impl std::ops::Add<f64> for DMS {
     }
 }
 
-impl std::ops::Sub<f64> for DMS {
+impl core::ops::Sub<f64> for DMS {
     type Output = Self;
     fn sub(self, rhs: f64) -> Self {
         if let Some(cardinal) = self.cardinal {
@@ -219,7 +212,7 @@ impl std::ops::Sub<f64> for DMS {
     }
 }
 
-impl std::ops::SubAssign<f64> for DMS {
+impl core::ops::SubAssign<f64> for DMS {
     fn sub_assign(&mut self, rhs: f64) {
         if let Some(cardinal) = self.cardinal {
             let a = self.to_ddeg_angle() - rhs;
@@ -234,7 +227,7 @@ impl std::ops::SubAssign<f64> for DMS {
     }
 }
 
-impl std::ops::Mul<f64> for DMS {
+impl core::ops::Mul<f64> for DMS {
     type Output = DMS;
     fn mul(self, rhs: f64) -> DMS {
         if let Some(cardinal) = self.cardinal {
@@ -250,7 +243,7 @@ impl std::ops::Mul<f64> for DMS {
     }
 }
 
-impl std::ops::Div<f64> for DMS {
+impl core::ops::Div<f64> for DMS {
     type Output = DMS;
     fn div(self, rhs: f64) -> DMS {
         if let Some(cardinal) = self.cardinal {
@@ -266,7 +259,7 @@ impl std::ops::Div<f64> for DMS {
     }
 }
 
-impl std::ops::MulAssign<f64> for DMS {
+impl core::ops::MulAssign<f64> for DMS {
     fn mul_assign(&mut self, rhs: f64) {
         if let Some(cardinal) = self.cardinal {
             let a = self.to_ddeg_angle() * rhs;
@@ -281,7 +274,7 @@ impl std::ops::MulAssign<f64> for DMS {
     }
 }
 
-impl std::ops::DivAssign<f64> for DMS {
+impl core::ops::DivAssign<f64> for DMS {
     fn div_assign(&mut self, rhs: f64) {
         if let Some(cardinal) = self.cardinal {
             let a = self.to_ddeg_angle() / rhs;
@@ -389,8 +382,7 @@ impl DMS {
     /// Returns Self expressed in decimal degrees
     /// If no cardinal is associated, returned angle strictly > 0.
     pub fn to_ddeg_angle(&self) -> f64 {
-        let d =
-            self.degrees as f64 + self.minutes as f64 / 60.0_f64 + self.seconds / 3600.0_f64;
+        let d = self.degrees as f64 + self.minutes as f64 / 60.0_f64 + self.seconds / 3600.0_f64;
         match self.cardinal {
             Some(cardinal) => {
                 if cardinal.is_southern() || cardinal.is_western() {
@@ -420,7 +412,7 @@ impl DMS {
 
     /// Converts self to radians
     pub fn to_radians(&self) -> f64 {
-        self.to_ddeg_angle() / 180.0 * std::f64::consts::PI
+        self.to_ddeg_angle() / 180.0 * core::f64::consts::PI
     }
     /*
         /// Descriptor must follow standard formats:
@@ -507,7 +499,7 @@ impl DMS {
     /// WGS84 to EU50 conversion applied.
     /// For conversion to be applied, we need a cardinal to be associated,
     /// otherwise this simply returns a copy
-    pub fn to_europe50(&self) -> Result<DMS, OpsError> {
+    pub fn to_europe50(&self) -> Result<DMS, Error> {
         if let Some(cardinal) = self.cardinal {
             if cardinal.is_latitude() {
                 *self + DMS::new(0, 0, 3.6, Some(Cardinal::North))

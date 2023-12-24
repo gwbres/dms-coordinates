@@ -1,9 +1,25 @@
-//! Package to manipulate 1D and 3D D°M'S'' coordinates,
-//! mainly in navigation applications.   
+//! Package to manipulate 1D and 3D sexagesimal coordinates.
 //! Homepage: <https://github.com/gwbres/dms-coordinates>
+#![cfg_attr(not(feature = "std"), no_std)]
+
 pub mod cardinal;
 pub mod dms;
 pub mod dms3d;
+
+#[derive(Debug)]
+pub enum Error {
+    InvalidLatitude,
+    MissingLatitude,
+    InvalidLongitude,
+    MissingLongitude,
+    /// When adding two cardinals toghether, they
+    /// must be compatible.
+    IncompatibleCardinals,
+    #[cfg(feature = "gpx")]
+    GpxParsingError,
+    #[cfg(feature = "gpx")]
+    GpxError,
+}
 
 pub use crate::{cardinal::Cardinal, dms::DMS, dms3d::DMS3d};
 

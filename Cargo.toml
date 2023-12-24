@@ -12,6 +12,8 @@ edition = "2018"
 readme = "README.md"
 
 [features]
+default = []
+std = ["serde", "serde_derive"]
 
 [dependencies]
 regex = "1"
@@ -20,7 +22,7 @@ rust-3d = "0.34.0"
 thiserror = "1"
 geo-types = "0.7.2"
 num-integer = "0.1.45"
-gpx = { version = "0.8.1", optional = true, default-features = false }
+gpx = { version = "0.8.1", optional = true, default-features = false, dep = ["std"]}
 serde = { version = "1.0.138", optional = true, default-features = false, features = ["derive"] }
 serde_derive = { version = "1", optional = true }
 

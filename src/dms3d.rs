@@ -1,19 +1,13 @@
 //! 3D D°M'S" coordinates
-use crate::dms::OpsError;
+use crate::Error;
 use crate::EARTH_RADIUS;
 use crate::{projected_distance, Cardinal, DMS};
-use thiserror::Error;
 
 #[cfg(feature = "serde")]
 use serde_derive::{Deserialize, Serialize};
 
-#[derive(Error, Debug)]
-pub enum ParseError {
-    #[error("format is not recognized")]
-    FormatNotRecognized,
-    #[error("failed to parse int number")]
-    ParseIntError(#[from] std::num::ParseIntError),
-}
+#[cfg(feature = "gpx")]
+use gpx::Waypoint;
 
 /// 3D D°M'S" coordinates, comprises
 /// a latitude: D°M'S" angle
@@ -30,27 +24,8 @@ pub struct DMS3d {
     pub altitude: Option<f64>,
 }
 
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("angle does not match a latitude")]
-    BadLatitude,
-    #[error("missing latitude definition")]
-    MissingLatitude,
-    #[error("angle does not match a longitude")]
-    BadLongitude,
-    #[error("missing longitude definition")]
-    MissingLongitude,
-    #[error("failed to open file")]
-    IoError(#[from] std::io::Error),
-    #[error("GPX parsing error")]
-    GpxParsingError,
-    #[cfg(feature = "gpx")]
-    #[error("failed to write GPX")]
-    GpxWritingError(#[from] gpx::errors::GpxError),
-}
-
-impl std::fmt::Display for DMS3d {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for DMS3d {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,
             "lat: \"{}\"  lon: \"{}\" alt: \"{}\"",
@@ -75,10 +50,7 @@ impl Default for DMS3d {
 impl From<DMS3d> for (f64, f64) {
     /// Converts self to (latddeg, londdeg)
     fn from(val: DMS3d) -> Self {
-        (
-            val.latitude.to_ddeg_angle(),
-            val.longitude.to_ddeg_angle(),
-        )
+        (val.latitude.to_ddeg_angle(), val.longitude.to_ddeg_angle())
     }
 }
 
@@ -89,9 +61,9 @@ impl From<rust_3d::Point3D> for DMS3d {
     }
 }
 
-impl std::ops::Add<DMS3d> for DMS3d {
-    type Output = Result<DMS3d, OpsError>;
-    fn add(self, rhs: Self) -> Result<Self, OpsError> {
+impl core::ops::Add<DMS3d> for DMS3d {
+    type Output = Result<DMS3d, Error>;
+    fn add(self, rhs: Self) -> Result<Self, Error> {
         if let Some(a0) = self.altitude {
             if let Some(a1) = rhs.altitude {
                 Ok(DMS3d {
@@ -118,29 +90,20 @@ impl std::ops::Add<DMS3d> for DMS3d {
 impl DMS3d {
     /// Builds `3D D°M'S"` coordinates
     pub fn new(latitude: DMS, longitude: DMS, altitude: Option<f64>) -> Result<DMS3d, Error> {
-        if let Some(c0) = latitude.cardinal {
-            if c0.is_latitude() {
-                if let Some(c1) = longitude.cardinal {
-                    if c1.is_longitude() {
-                        Ok(DMS3d {
-                            latitude,
-                            longitude,
-                            altitude,
-                        })
-                    } else {
-                        Err(Error::BadLongitude)
-                    }
-                } else {
-                    Err(Error::MissingLongitude)
-                }
-            } else {
-                Err(Error::BadLatitude)
-            }
-        } else {
-            Err(Error::MissingLatitude)
+        let cardlat = latitude.cardinal.ok_or(Error::MissingLatitude)?;
+        if !cardlat.is_latitude() {
+            return Err(Error::InvalidLatitude);
         }
+        let cardlon = longitude.cardinal.ok_or(Error::MissingLongitude)?;
+        if !cardlon.is_longitude() {
+            return Err(Error::InvalidLongitude);
+        }
+        Ok(DMS3d {
+            latitude,
+            longitude,
+            altitude,
+        })
     }
-
     /// Builds 3D DMS copy with given altitude attribute in `meters`,
     /// if altitude data was already present, it gets overwritten
     pub fn with_altitude(&self, altitude: f64) -> DMS3d {
@@ -249,47 +212,8 @@ impl DMS3d {
             z: EARTH_RADIUS * lat.sin(),
         }
     }
-
-    /// Writes self into given file in GPX format.  
-    /// Resulting GPX file contains a single waypoint route.
-    #[cfg(feature = "gpx")]
-    pub fn to_gpx(&self, fp: &str) -> Result<(), gpx::errors::GpxError> {
-        let mut gpx: gpx::Gpx = Default::default();
-        gpx.version = gpx::GpxVersion::Gpx11;
-        let mut wpt = gpx::Waypoint::new(geo_types::Point::new(
-            self.latitude.to_ddeg_angle(),
-            self.longitude.to_ddeg_angle(),
-        ));
-        wpt.elevation = self.altitude;
-        gpx.waypoints.push(wpt);
-        gpx::write(&gpx, std::fs::File::create(fp).unwrap())
-    }
-
-    /// Builds 3D D°M'S" coordinates from a GPX file,
-    /// which must either contain a single waypoint,
-    /// otherwise we use the 1st waypoint encountered in the route.
-    #[cfg(feature = "gpx")]
-    pub fn from_gpx(fp: &str) -> Result<Option<DMS3d>, Error> {
-        let fd = std::fs::File::open(fp)?;
-        let content: Result<gpx::Gpx, gpx::errors::GpxError> = gpx::read(fd);
-        match content {
-            Ok(mut gpx) => {
-                if let Some(wpt) = gpx.waypoints.pop() {
-                    Ok(Some(DMS3d::from_ddeg_angles(
-                        wpt.point().x(),
-                        wpt.point().y(),
-                        wpt.elevation,
-                    )))
-                } else {
-                    Ok(None)
-                }
-            }
-            Err(_) => Err(Error::GpxParsingError),
-        }
-    }
-
     /// Converts Self from WGS84 to EU50 Data
-    pub fn to_europe50(&self) -> Result<DMS3d, OpsError> {
+    pub fn to_europe50(&self) -> Result<DMS3d, Error> {
         Ok(DMS3d {
             latitude: self.latitude.to_europe50()?,
             longitude: self.longitude.to_europe50()?,
@@ -298,9 +222,15 @@ impl DMS3d {
     }
 }
 
-/*
+#[cfg(feature = "gpx")]
+impl From<Waypoint> for DMS3d {
+    fn from(wpt: Waypoint) -> Self {
+        Self::from_ddeg_angles(wpt.point().x(), wpt.point().y(), wpt.elevation)
+    }
+}
 
-impl std::ops::Sub for DMS3d {
+/*
+impl core::ops::Sub for DMS3d {
     type Output = DMS3d;
     fn sub (self, rhs: Self) -> Self {
         let altitude : Option<f64> = match self.altitude {
@@ -325,7 +255,7 @@ impl std::ops::Sub for DMS3d {
     }
 }
 
-impl std::ops::Mul for DMS3d {
+impl core::ops::Mul for DMS3d {
     type Output = DMS3d;
     fn mul (self, rhs: Self) -> Self {
         let altitude : Option<f64> = match self.altitude {
@@ -350,7 +280,7 @@ impl std::ops::Mul for DMS3d {
     }
 }
 
-impl std::ops::Div for DMS3d {
+impl core::ops::Div for DMS3d {
     type Output = DMS3d;
     fn div (self, rhs: Self) -> Self {
         let altitude : Option<f64> = match self.altitude {
