@@ -22,3 +22,9 @@ can be used to represent Latitude / Longitude angles
 
 * serde: enable `DMS`, `DMS3d`, `Cardinal` serdes ops
 * gpx: enable `DMS3d::from_gpx` and `DMS3d::to_gpx`
+
+## Other solutions
+
+Other solutions exist nowadays in Rust to deal with sexagesimal coordiantes.  
+The `geodesy` library is one of them, and most likely more consistent than this library.  
+The sole interest you can find here is the few dependencies that this library has. 
