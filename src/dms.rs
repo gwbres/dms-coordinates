@@ -364,7 +364,7 @@ impl DMS {
     /// from given angle expressed in decimal degrees
     pub fn from_ddeg_longitude(angle: f64) -> Self {
         let degrees = angle.abs().floor();
-        let minutes = (angle.abs() - degrees) * 60.0;
+        let minutes = ((angle.abs() - degrees) * 60.0).floor();
         let seconds = (angle.abs() - degrees - minutes / 60.0_f64) * 3600.0_f64;
         let cardinal = if angle < 0.0 {
             Cardinal::West
