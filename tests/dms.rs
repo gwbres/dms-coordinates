@@ -24,10 +24,10 @@ mod dms {
     }
     #[test]
     fn test_to_string() {
-        assert_eq!(DMS::new(35, 39, 10.0, None).to_string(), "35°39'10\"");
+        assert_eq!(DMS::new(35, 39, 10.0, None).to_string(), "35°39'10.0000\"");
         assert_eq!(
             DMS::new(39, 40, 43.0, Some(Cardinal::SouthWest)).to_string(),
-            "39°40'43\"SW"
+            "39°40'43.0000\"SW"
         );
     }
     #[test]
