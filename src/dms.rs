@@ -53,11 +53,11 @@ impl core::fmt::Display for DMS {
         if let Some(cardinal) = self.cardinal {
             write!(
                 f,
-                "{}°{}'{}\"{}",
+                "{}°{}'{:.4}\"{}",
                 self.degrees, self.minutes, self.seconds, cardinal,
             )
         } else {
-            write!(f, "{}°{}'{}\"", self.degrees, self.minutes, self.seconds,)
+            write!(f, "{}°{}'{:.4}\"", self.degrees, self.minutes, self.seconds)
         }
     }
 }
