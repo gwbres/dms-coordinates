@@ -19,7 +19,7 @@ std = ["serde", "serde_derive"]
 regex = "1"
 map_3d = "0.1.4" 
 rust-3d = "0.34.0"
-thiserror = "1"
+thiserror = "2"
 geo-types = "0.7.2"
 num-integer = "0.1.45"
 gpx = { version = "0.8.1", optional = true, default-features = false, dep = ["std"]}
